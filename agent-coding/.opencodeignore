@@ -1,0 +1,18 @@
+# OpenCode Security Firewall
+
+# Global Secrets
+.secrets
+.env
+.env.*
+*.pem
+*.key
+id_rsa*
+known_hosts
+
+# OpenCode Harness (Self-Protection)
+agent-coding/opencode/opencode.json
+
+# Standard Git ignores
+.git/
+node_modules/
+.DS_Store

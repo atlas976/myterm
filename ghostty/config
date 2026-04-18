@@ -1,0 +1,15 @@
+# --- THEME & COLORS ---
+theme = "Gruvbox Dark"
+
+# --- WINDOW PADDING ---
+window-padding-x = 10
+window-padding-y = 10
+
+# --- MACOS UI TWEAKS ---
+macos-titlebar-style = hidden
+
+# --- CURSOR ---
+cursor-style = block
+
+# --- TEXT ---
+font-family = "MesloLGS NF"
