@@ -17,7 +17,7 @@ fi
 
 # 2. Install Core Dependencies & Fonts
 echo "📥 Installing core packages..."
-brew install git zsh neovim ripgrep fd tree-sitter-cli node opencode fzf
+brew install git zsh neovim ripgrep fd tree-sitter-cli node fzf
 brew install --cask ghostty 
 
 # Install Meslo Nerd Font (Required for Powerlevel10k icons)
@@ -71,28 +71,16 @@ fi
 ln -sf "$REPO_DIR/zsh/.p10k.zsh" ~/.p10k.zsh
 echo "  -> Linked Powerlevel10k config"
 
-# OpenCode Agent
-mkdir -p ~/.config/opencode
-
-if [ -f ~/.config/opencode/opencode.json ] && [ ! -L ~/.config/opencode/opencode.json ]; then
-    mv ~/.config/opencode/opencode.json ~/.config/opencode/opencode.json.backup
+# Agent Global Configuration
+echo "🔗 Symlinking agent configuration..."
+if [ -d ~/agent-coding ] && [ ! -L ~/agent-coding ]; then
+    mv ~/agent-coding ~/agent-coding.backup
+    echo "  -> Backed up existing ~/agent-coding directory to ~/agent-coding.backup"
 fi
-ln -sf "$REPO_DIR/agent-coding/opencode/opencode.json" ~/.config/opencode/opencode.json
-
-if [ -f ~/.config/opencode/AGENTS.md ] && [ ! -L ~/.config/opencode/AGENTS.md ]; then
-    mv ~/.config/opencode/AGENTS.md ~/.config/opencode/AGENTS.md.backup
-fi
-ln -sf "$REPO_DIR/agent-coding/AGENTS.md" ~/.config/opencode/AGENTS.md
-ln -sf "$REPO_DIR/agent-coding/tools.md" ~/.config/opencode/tools.md
-ln -sf "$REPO_DIR/agent-coding/.opencodeignore" ~/.config/opencode/.opencodeignore
-
-if [ -d ~/.config/opencode/skills ] && [ ! -L ~/.config/opencode/skills ]; then
-    mv ~/.config/opencode/skills ~/.config/opencode/skills.backup
-fi
-# Using -n to ensure we link the directory correctly instead of putting a link inside an existing one
-ln -sfn "$REPO_DIR/agent-coding/skills" ~/.config/opencode/skills
-
-echo "  -> Linked OpenCode configuration and skills"
+# Symlink the entire agent-coding directory so any CLI agent (Gemini, Claude, Codex)
+# can pick up its configuration files globally without hardcoding here.
+ln -sfn "$REPO_DIR/agent-coding" ~/agent-coding
+echo "  -> Linked generic agent-coding directory"
 
 # Secrets
 if [ -f ~/.secrets ] && [ ! -L ~/.secrets ]; then

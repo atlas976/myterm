@@ -6,7 +6,7 @@ Welcome to `myterm`, a meticulously crafted, blazingly fast, and keyboard-centri
 * **Terminal:** [Ghostty](https://ghostty.org/) (GPU-accelerated via Metal, zero input latency, native macOS feel).
 * **Shell:** Zsh with Powerlevel10k (Extremely fast, Git-aware prompt).
 * **Editor:** Neovim with [Kickstart.nvim](https://github.com/nvim-lua/kickstart.nvim) (A starting point for a fast, modern Lua-based IDE).
-* **AI Agent:** OpenCode (Strictly sandboxed, modular terminal coding assistant).
+* **AI Agent:** Agnostic CLI Agent Configuration (e.g., Gemini CLI, Claude Code) with strict sandboxing.
 * **Fuzzy Finder:** fzf (Instant command-line search for files and history via `Ctrl+T` / `Ctrl+R`).
 * **Theme:** Gruvbox Dark (Warm, earthy tones, easy on the eyes). To see more themes run 
 ```bash 
@@ -18,11 +18,9 @@ ghostty +list-themes
 
 ```text
 ~/myterm/
-├── agent-coding/    # OpenCode AI Assistant Brain
-│   ├── AGENTS.md    # Agent personas and strict security rules
-│   ├── tools.md     # Strict definition of allowed tools
-│   ├── .opencodeignore # Firewall against reading sensitive data
-│   ├── opencode/    # OpenCode JSON configurations
+├── agent-coding/    # AI Assistant Brain and Rules (Gemini, Claude, etc.)
+│   ├── GEMINI.md    # Agent personas and strict security rules
+│   ├── .geminiignore # Firewall against reading sensitive data
 │   └── skills/      # Modular tools and scripts (e.g., safe_commit.sh)
 ├── ghostty/
 │   └── config       # Ghostty terminal configuration

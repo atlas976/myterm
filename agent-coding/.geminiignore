@@ -1,4 +1,4 @@
-# OpenCode Security Firewall
+# Agent Security Firewall
 
 # Global Secrets
 .secrets
@@ -9,8 +9,8 @@
 id_rsa*
 known_hosts
 
-# OpenCode Harness (Self-Protection)
-agent-coding/opencode/opencode.json
+# Agent Harness (Self-Protection)
+agent-coding/GEMINI.md
 
 # Standard Git ignores
 .git/

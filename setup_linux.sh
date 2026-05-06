@@ -56,7 +56,6 @@ fi
 echo "📁 Preparing system directories..."
 mkdir -p ~/.config/ghostty
 mkdir -p ~/.config/nvim
-mkdir -p ~/.config/opencode
 
 # 7. Symlinks erstellen (mit Helfer-Funktion für sauberen Code)
 echo "🔗 Symlinking configuration files..."
@@ -77,13 +76,15 @@ link_file "$REPO_DIR/nvim/init.lua" ~/.config/nvim/init.lua
 link_file "$REPO_DIR/zsh/.zshrc" ~/.zshrc
 link_file "$REPO_DIR/zsh/.p10k.zsh" ~/.p10k.zsh
 
-# OpenCode Agent
-link_file "$REPO_DIR/agent-coding/opencode/opencode.json" ~/.config/opencode/opencode.json
-link_file "$REPO_DIR/agent-coding/AGENTS.md" ~/.config/opencode/AGENTS.md
-link_file "$REPO_DIR/agent-coding/tools.md" ~/.config/opencode/tools.md
-link_file "$REPO_DIR/agent-coding/.opencodeignore" ~/.config/opencode/.opencodeignore
-# Symlink für das Skills-Verzeichnis (Flag -n verhindert das Hineinlinken in bestehende Ordner)
-ln -sfn "$REPO_DIR/agent-coding/skills" ~/.config/opencode/skills
+# Agent Global Configuration
+# Symlink the entire agent-coding directory so any CLI agent (Gemini, Claude, Codex)
+# can pick up its configuration files globally without hardcoding here.
+if [ -d ~/agent-coding ] && [ ! -L ~/agent-coding ]; then
+    mv ~/agent-coding ~/agent-coding.backup
+    echo "  -> Backed up existing ~/agent-coding directory to ~/agent-coding.backup"
+fi
+ln -sfn "$REPO_DIR/agent-coding" ~/agent-coding
+echo "  -> Linked generic agent-coding directory"
 
 # Secrets
 if [ ! -f "$REPO_DIR/zsh/.secrets" ]; then
