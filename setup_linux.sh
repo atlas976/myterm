@@ -86,6 +86,19 @@ fi
 ln -sfn "$REPO_DIR/agent-coding" ~/agent-coding
 echo "  -> Linked generic agent-coding directory"
 
+# Install Agent Skills
+echo "🧠 Installing agent skills..."
+if command -v gemini &> /dev/null; then
+    for skill in "$REPO_DIR"/agent-coding/skills/*.skill; do
+        if [ -f "$skill" ]; then
+            echo "  -> Installing skill: $(basename "$skill")"
+            gemini skills install "$skill" --scope user --consent
+        fi
+    done
+else
+    echo "  -> Gemini CLI not found. Skipping automatic skill installation."
+fi
+
 # Secrets
 if [ ! -f "$REPO_DIR/zsh/.secrets" ]; then
     echo "# Add your API keys and secrets here" > "$REPO_DIR/zsh/.secrets"
