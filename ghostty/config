@@ -14,3 +14,6 @@ cursor-style = block
 # --- TEXT ---
 font-family = "MesloLGS NF"
 font-size = 20
+
+# --- fzfcommands ---
+keybind = opt+c=text:\x1bc

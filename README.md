@@ -59,4 +59,32 @@ chmod +x setup_linux.sh
 ```
 
 ---
+
+## Shortcuts:
+
+**Explorer:**
+
+1. a – Add: Erstellt eine neue Datei oder einen neuen Ordner (Tipp: Setze einen / ans Ende des Namens, um einen Ordner zu erstellen).
+2. r – Rename: Benennt die Datei oder den Ordner unter dem Cursor um.
+3. d – Delete: Löscht die ausgewählte Datei oder den Ordner (du wirst meistens noch um Bestätigung gebeten).
+4. c – Copy: Kopiert die Datei/den Ordner in die Zwischenablage des Explorers.
+5. x – Cut: Schneidet die Datei/den Ordner aus (Ausschneiden).
+6. p – Paste: Fügt die zuvor kopierte oder ausgeschnittene Datei an der aktuellen Position ein.
+7. y – Yank: Kopiert den Dateinamen (oder bei manchen Konfigurationen den absoluten Dateipfad) in deine System-Zwischenablage.
+
+     *Dateien öffnen:*
+8. <Enter> (oder o) – Open: Öffnet die Datei im Hauptfenster oder klappt einen Ordner auf/zu.
+9. v – Vertical Split: Öffnet die Datei in einem neuen vertikalen Fenster (Split).
+10. s – Split: Öffnet die Datei in einem neuen horizontalen Fenster (Split).
+11. t – Tab: Öffnet die Datei in einem neuen Neovim-Tab.
+
+     *Ansicht und Navigation:*
+12. R – Refresh: Lädt den Datei-Explorer neu (hilfreich, wenn Dateien außerhalb von Neovim geändert wurden).
+13. H – Hidden: Blendet versteckte Dateien (Dotfiles wie .gitignore oder .cache) ein oder aus.
+14. I – Ignore: Blendet Dateien ein oder aus, die in der .gitignore stehen (z.B. der build/ Ordner).
+15. W – Collapse All: Klappt alle geöffneten Ordner auf einmal zu.
+
+
+
+
 *Documented and built with intention. Ready for Tmux next.*
