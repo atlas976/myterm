@@ -20,6 +20,7 @@ echo "📥 Installing core packages..."
 brew install git zsh neovim ripgrep fd tree-sitter-cli node fzf
 brew install --cask ghostty 
 brew install --cask nikitabobko/tap/aerospace
+brew install --cask karabiner-elements
 
 # Install Meslo Nerd Font (Required for Powerlevel10k icons)
 echo "🔤 Installing Meslo Nerd Font..."
@@ -36,9 +37,18 @@ fi
 echo "📁 Preparing system directories..."
 mkdir -p ~/.config/ghostty
 mkdir -p ~/.config/aerospace
+mkdir -p ~/.config/karabiner/assets/complex_modifications
 
 # 5. Create Symlinks (Die Brücken bauen)
 echo "🔗 Symlinking configuration files..."
+
+# Karabiner-Elements
+if [ -f ~/.config/karabiner/karabiner.json ] && [ ! -L ~/.config/karabiner/karabiner.json ]; then
+    mv ~/.config/karabiner/karabiner.json ~/.config/karabiner/karabiner.json.backup
+    echo "  -> Backed up existing Karabiner config to karabiner.json.backup"
+fi
+ln -sf "$REPO_DIR/karabiner/karabiner.json" ~/.config/karabiner/karabiner.json
+echo "  -> Linked full Karabiner-Elements config (Caps Lock -> Meh is auto-enabled!)"
 
 # Ghostty
 if [ -f ~/.config/ghostty/config ] && [ ! -L ~/.config/ghostty/config ]; then

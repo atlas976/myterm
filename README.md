@@ -5,6 +5,7 @@ Welcome to `myterm`, a meticulously crafted, blazingly fast, and keyboard-centri
 ## 🧰 Current Stack
 * **Terminal:** [Ghostty](https://ghostty.org/) (GPU-accelerated via Metal, zero input latency, native macOS feel).
 * **Window Manager (macOS):** [AeroSpace](https://nikitabobko.github.io/AeroSpace/guide) (i3-inspired tiling window manager for macOS).
+* **Keyboard Customizer (macOS):** Karabiner-Elements (Maps Caps Lock to Cmd+Ctrl+Alt / Escape).
 * **Shell:** Zsh with Powerlevel10k (Extremely fast, Git-aware prompt).
 * **Editor:** Neovim with [Kickstart.nvim](https://github.com/nvim-lua/kickstart.nvim) (A starting point for a fast, modern Lua-based IDE).
 * **AI Agent:** Agnostic CLI Agent Configuration (e.g., Gemini CLI, Claude Code) with strict sandboxing.
@@ -13,6 +14,14 @@ Welcome to `myterm`, a meticulously crafted, blazingly fast, and keyboard-centri
 ```bash 
 ghostty +list-themes
 ```
+
+## ⚠️ Important macOS Settings for AeroSpace
+
+**Reset Accessibility Permissions (The #1 fix for dead commands):** macOS updates frequently corrupt or revoke these permissions silently. Go to System Settings > Privacy & Security > Accessibility. Don't just toggle AeroSpace off and on—select it, delete it using the minus (-) button, and then add the app back fresh.
+
+**Turn Off Stage Manager:** Stage Manager fundamentally conflicts with AeroSpace. Stage Manager tries to group and hide windows off-screen, while AeroSpace tries to calculate and tile them across workspaces. If both are running, they will fight each other, resulting in broken window movements.
+
+**Enable "Displays have separate Spaces":** If this setting is disabled, you will experience massive bugs with window movement, focus, and performance. Go to System Settings > Desktop & Dock and ensure this is toggled ON.
 
 ## 📂 Structure
 **Note:** You have to enter the details in your `.secrets` file after running the setup script.
@@ -50,7 +59,6 @@ chmod +x setup.sh
 # 2. Run the setup
 ./setup.sh
 ```
-**Note for AeroSpace:** After setup, open the AeroSpace app. macOS will require **Accessibility permissions** (System Settings > Privacy & Security > Accessibility). Grant them, and the tiling will activate immediately. No restart required.
 
 ### Linux
 ```bash
