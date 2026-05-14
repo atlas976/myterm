@@ -4,6 +4,7 @@ Welcome to `myterm`, a meticulously crafted, blazingly fast, and keyboard-centri
 
 ## 🧰 Current Stack
 * **Terminal:** [Ghostty](https://ghostty.org/) (GPU-accelerated via Metal, zero input latency, native macOS feel).
+* **Window Manager (macOS):** [AeroSpace](https://nikitabobko.github.io/AeroSpace/guide) (i3-inspired tiling window manager for macOS).
 * **Shell:** Zsh with Powerlevel10k (Extremely fast, Git-aware prompt).
 * **Editor:** Neovim with [Kickstart.nvim](https://github.com/nvim-lua/kickstart.nvim) (A starting point for a fast, modern Lua-based IDE).
 * **AI Agent:** Agnostic CLI Agent Configuration (e.g., Gemini CLI, Claude Code) with strict sandboxing.
@@ -22,6 +23,8 @@ ghostty +list-themes
 │   ├── GEMINI.md    # Agent personas and strict security rules
 │   ├── .geminiignore # Firewall against reading sensitive data
 │   └── skills/      # Modular tools and scripts (e.g., safe_commit.sh)
+├── aerospace/
+│   └── aerospace.toml # AeroSpace tiling window manager configuration
 ├── ghostty/
 │   └── config       # Ghostty terminal configuration
 ├── nvim/
@@ -47,6 +50,7 @@ chmod +x setup.sh
 # 2. Run the setup
 ./setup.sh
 ```
+**Note for AeroSpace:** After setup, open the AeroSpace app. macOS will require **Accessibility permissions** (System Settings > Privacy & Security > Accessibility). Grant them, and the tiling will activate immediately. No restart required.
 
 ### Linux
 ```bash
@@ -59,6 +63,14 @@ chmod +x setup_linux.sh
 ```
 
 ---
+
+## 🧭 AeroSpace Window Rules
+The system automatically organizes your workspace:
+*   **Workspace 1:** Default for all general applications.
+*   **Workspace 2:** **Vivaldi** (Full Screen).
+*   **Workspace 3:** **Ghostty** (Maximized/Full Screen).
+*   **Workspace 4:** **Slack** (Full Screen).
+*   **Workspace 5:** **Spotify** (Full Screen).
 
 ## Shortcuts:
 
@@ -84,7 +96,16 @@ chmod +x setup_linux.sh
 14. I – Ignore: Blendet Dateien ein oder aus, die in der .gitignore stehen (z.B. der build/ Ordner).
 15. W – Collapse All: Klappt alle geöffneten Ordner auf einmal zu.
 
+**AeroSpace (macOS Window Manager):**
 
+1. `alt` + `1-5` – Switch to Workspace 1-5
+2. `alt` + `shift` + `1-5` – Move window to Workspace 1-5
+3. `alt` + `h/j/k/l` – Focus window (Left, Down, Up, Right)
+4. `alt` + `shift` + `h/j/k/l` – Move window (Left, Down, Up, Right)
+5. `alt` + `/` – Toggle tiling layout (Horizontal/Vertical)
+6. `alt` + `,` – Toggle accordion layout
+7. `alt` + `shift` + `r` – Reload AeroSpace configuration
 
+*Note: Automated window rules move Vivaldi (2), Ghostty (3), Slack (4), and Spotify (5) to dedicated workspaces.*
 
 *Documented and built with intention. Ready for Tmux next.*

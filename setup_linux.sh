@@ -76,6 +76,9 @@ link_file "$REPO_DIR/nvim/init.lua" ~/.config/nvim/init.lua
 link_file "$REPO_DIR/zsh/.zshrc" ~/.zshrc
 link_file "$REPO_DIR/zsh/.p10k.zsh" ~/.p10k.zsh
 
+# AeroSpace (Config only, app is macOS only)
+link_file "$REPO_DIR/aerospace/aerospace.toml" ~/.config/aerospace/aerospace.toml
+
 # Agent Global Configuration
 # Symlink the entire agent-coding directory so any CLI agent (Gemini, Claude, Codex)
 # can pick up its configuration files globally without hardcoding here.

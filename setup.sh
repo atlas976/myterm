@@ -19,6 +19,7 @@ fi
 echo "📥 Installing core packages..."
 brew install git zsh neovim ripgrep fd tree-sitter-cli node fzf
 brew install --cask ghostty 
+brew install --cask nikitabobko/tap/aerospace
 
 # Install Meslo Nerd Font (Required for Powerlevel10k icons)
 echo "🔤 Installing Meslo Nerd Font..."
@@ -34,6 +35,7 @@ fi
 # 4. Create Target Directories
 echo "📁 Preparing system directories..."
 mkdir -p ~/.config/ghostty
+mkdir -p ~/.config/aerospace
 
 # 5. Create Symlinks (Die Brücken bauen)
 echo "🔗 Symlinking configuration files..."
@@ -45,6 +47,14 @@ if [ -f ~/.config/ghostty/config ] && [ ! -L ~/.config/ghostty/config ]; then
 fi
 ln -sf "$REPO_DIR/ghostty/config" ~/.config/ghostty/config
 echo "  -> Linked Ghostty config"
+
+# AeroSpace
+if [ -f ~/.config/aerospace/aerospace.toml ] && [ ! -L ~/.config/aerospace/aerospace.toml ]; then
+    mv ~/.config/aerospace/aerospace.toml ~/.config/aerospace/aerospace.toml.backup
+    echo "  -> Backed up existing AeroSpace config to aerospace.toml.backup"
+fi
+ln -sf "$REPO_DIR/aerospace/aerospace.toml" ~/.config/aerospace/aerospace.toml
+echo "  -> Linked AeroSpace config"
 
 # Neovim
 mkdir -p ~/.config/nvim
