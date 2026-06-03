@@ -20,14 +20,14 @@ sudo add-apt-repository ppa:neovim-ppa/stable -y
 sudo add-apt-repository ppa:mkasberg/ghostty-ubuntu -y
 sudo apt-get update -y
 
-# 3. Core Dependencies über apt installieren
-echo "📥 Installiere Basis-Pakete (Git, Zsh, Neovim, Ghostty, Node.js etc.)..."
-sudo apt-get install -y git zsh neovim ghostty ripgrep fd-find nodejs npm fzf
+# 3. Install core dependencies via apt
+echo "📥 Installiere Basis-Pakete (Git, Zsh, Neovim, Ghostty, i3, Node.js etc.)..."
+sudo apt-get install -y git zsh neovim ghostty i3 ripgrep fd-find nodejs npm fzf
 
 # Ubuntu-spezifischer Fix für fd-find (Neovim erwartet oft den Befehl 'fd')
 mkdir -p ~/.local/bin
-if [ -x "$(command -v fdfind)" ] && [ ! -L ~/.local/bin/fd ]; then
-    ln -s $(which fdfind) ~/.local/bin/fd
+if command -v fdfind > /dev/null 2>&1 && [ ! -L ~/.local/bin/fd ]; then
+    ln -s "$(command -v fdfind)" ~/.local/bin/fd
     echo "🔧 Symlink für 'fd' erstellt."
 fi
 export PATH="$HOME/.local/bin:$PATH"
@@ -56,6 +56,7 @@ fi
 echo "📁 Preparing system directories..."
 mkdir -p ~/.config/ghostty
 mkdir -p ~/.config/nvim
+mkdir -p ~/.config/i3
 
 # 7. Symlinks erstellen (mit Helfer-Funktion für sauberen Code)
 echo "🔗 Symlinking configuration files..."
@@ -70,14 +71,12 @@ link_file() {
     ln -sf "$src" "$dest"
 }
 
-# Ghostty, Neovim, Zsh, P10k
+# Ghostty, i3, Neovim, Zsh, P10k
 link_file "$REPO_DIR/ghostty/config" ~/.config/ghostty/config
+link_file "$REPO_DIR/i3/config" ~/.config/i3/config
 link_file "$REPO_DIR/nvim/init.lua" ~/.config/nvim/init.lua
 link_file "$REPO_DIR/zsh/.zshrc" ~/.zshrc
 link_file "$REPO_DIR/zsh/.p10k.zsh" ~/.p10k.zsh
-
-# AeroSpace (Config only, app is macOS only)
-link_file "$REPO_DIR/aerospace/aerospace.toml" ~/.config/aerospace/aerospace.toml
 
 # Agent Global Configuration
 # Symlink the entire agent-coding directory so any CLI agent (Gemini, Claude, Codex)

@@ -5,6 +5,7 @@ Welcome to `myterm`, a meticulously crafted, blazingly fast, and keyboard-centri
 ## 🧰 Current Stack
 * **Terminal:** [Ghostty](https://ghostty.org/) (GPU-accelerated via Metal, zero input latency, native macOS feel).
 * **Window Manager (macOS):** [AeroSpace](https://nikitabobko.github.io/AeroSpace/guide) (i3-inspired tiling window manager for macOS).
+* **Window Manager (Linux):** [i3](https://i3wm.org/) (native tiling window manager with a similar keyboard-first workflow).
 * **Keyboard Customizer (macOS):** Karabiner-Elements (Maps Caps Lock to Cmd+Ctrl+Alt / Escape).
 * **Shell:** Zsh with Powerlevel10k (Extremely fast, Git-aware prompt).
 * **Editor:** Neovim with [Kickstart.nvim](https://github.com/nvim-lua/kickstart.nvim) (A starting point for a fast, modern Lua-based IDE).
@@ -27,6 +28,7 @@ ghostty +list-themes
 During the initial `./setup.sh` execution, **Homebrew will ask for your Mac password** in the terminal because Karabiner-Elements installs a virtual keyboard driver.
 * After installation, you **must open the Karabiner-Elements app once**. macOS will prompt you to allow its System Extension and Input Monitoring permissions. You have to allow these for the Hyper Key to work.
 * You do **not** need to open the app manually after restarting your Mac. Karabiner runs quietly in the background automatically as a system daemon.
+* **Configuration Updates:** Because Karabiner-Elements breaks symlinks upon reloading, the `setup.sh` script copies (rather than symlinks) the `karabiner.json` file. If you make changes to the `karabiner.json` in this repository, you **must re-run `./setup.sh`** to apply them.
 
 ## 📂 Structure
 **Note:** You have to enter the details in your `.secrets` file after running the setup script.
@@ -41,6 +43,8 @@ During the initial `./setup.sh` execution, **Homebrew will ask for your Mac pass
 │   └── aerospace.toml # AeroSpace tiling window manager configuration
 ├── ghostty/
 │   └── config       # Ghostty terminal configuration
+├── i3/
+│   └── config       # i3 tiling window manager configuration for Linux
 ├── nvim/
 │   └── init.lua     # Neovim (Kickstart) configuration
 ├── zsh/
@@ -77,13 +81,15 @@ chmod +x setup_linux.sh
 
 ---
 
-## 🧭 AeroSpace Window Rules
-The system automatically organizes your workspace:
+## 🧭 Window Rules
+macOS uses AeroSpace. Linux uses i3 with equivalent workspace assignments where the Linux application class names are known.
+
+The system organizes the main workspaces like this:
 *   **Workspace 1:** **Vivaldi**
-*   **Workspace 2:** **Communication Apps** (Outlook left, Slack center, WhatsApp right – accordion layout)
+*   **Workspace 2:** **Communication Apps** (Outlook, Slack, Teams, Discord, WhatsApp where Linux app classes match)
 *   **Workspace 3:** **Ghostty** (Floating across the whole window)
 *   **Workspace 4:** **Spotify**
-*   **Workspace 5:** General catch-all for other applications (Floating)
+*   **Workspace 5:** General catch-all for other applications on macOS; manual/general workspace on Linux
 
 ## Shortcuts:
 
@@ -121,6 +127,17 @@ The system automatically organizes your workspace:
 6. `cmd` + `alt` + `ctrl` + `shift` + `space` – Toggle floating / tiling layout
 7. `cmd` + `alt` + `ctrl` + `,` – Toggle accordion layout
 
-*Note: Automated window rules move Vivaldi (1), Communication (2), Ghostty (3), and Spotify (4) to dedicated workspaces.*
+*Note: AeroSpace has a macOS catch-all rule. i3 routes the known app classes in `i3/config`, and unknown apps stay wherever they open.*
 
-*Documented and built with intention. 
+**i3 (Linux Window Manager):**
+
+1. `Super` + `1-9` – Switch to Workspace 1-9
+2. `Super` + `shift` + `1-9` – Move window to Workspace 1-9
+3. `Super` + `h/j/k/l` – Focus window (Left, Down, Up, Right)
+4. `Super` + `shift` + `h/j/k/l` – Move window (Left, Down, Up, Right)
+5. `Super` + `f` – Toggle Fullscreen
+6. `Super` + `shift` + `space` – Toggle floating / tiling layout
+7. `Super` + `,` – Use tabbed layout
+8. `Super` + `Enter` – Open Ghostty
+
+*Documented and built with intention.*

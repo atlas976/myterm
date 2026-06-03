@@ -47,8 +47,8 @@ if [ -f ~/.config/karabiner/karabiner.json ] && [ ! -L ~/.config/karabiner/karab
     mv ~/.config/karabiner/karabiner.json ~/.config/karabiner/karabiner.json.backup
     echo "  -> Backed up existing Karabiner config to karabiner.json.backup"
 fi
-ln -sf "$REPO_DIR/karabiner/karabiner.json" ~/.config/karabiner/karabiner.json
-echo "  -> Linked full Karabiner-Elements config (Caps Lock -> Meh is auto-enabled!)"
+cp "$REPO_DIR/karabiner/karabiner.json" ~/.config/karabiner/karabiner.json
+echo "  -> Copied full Karabiner-Elements config (Karabiner breaks symlinks)"
 
 # Ghostty
 if [ -f ~/.config/ghostty/config ] && [ ! -L ~/.config/ghostty/config ]; then
