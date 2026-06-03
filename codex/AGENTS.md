@@ -1,20 +1,19 @@
 # Global Codex Guidance
 
-## Communication and Code
+## Communication and Language
 
-- Write code, comments, commits, and technical documentation in English.
+- Write all code, code comments, commit messages, and technical documentation in English.
 - Be direct and pragmatic. Prefer concise implementation notes over broad explanations.
-- Follow the active repository's `AGENTS.md` and closer nested instructions.
+- Follow the active repository's `AGENTS.md` and closer nested instructions for project-specific rules.
 
-## Security
+## Security and Permissions
 
-- Never read, print, stage, or modify `.env*`, `~/.secrets`, SSH keys, private keys, or ignored secret files.
-- Do not run `git push`.
+- Do not read, print, stage, or modify `.env*`, `~/.secrets`, SSH keys, private keys, or ignored secret files.
+- `git push` is allowed only after explicit prior permission from the user.
 - Ask for approval before destructive actions, broad filesystem changes, network installs, or commands that require elevated permissions.
 
 ## Workflow
 
 - Inspect the repository before editing.
-- Prefer existing project patterns over new abstractions.
 - Run relevant checks before handoff.
 - Before committing, use `~/.codex/scripts/safe_commit.sh` when it exists.

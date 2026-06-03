@@ -12,7 +12,7 @@ while IFS= read -r -d '' file; do
 done < <(git diff --cached --name-only --diff-filter=d -z)
 
 if [ "${#STAGED_FILES[@]}" -gt 0 ]; then
-    SECRET_PATTERN='[[:alnum:]_]*(api[_-]?key|password|secret|token)[[:alnum:]_]*[[:space:]]*=|-----BEGIN [A-Z ]*PRIVATE KEY-----'
+    SECRET_PATTERN='(^|[^[:alnum:]_])((api[_-]?key|password|secret|token|client[_-]?secret|access[_-]?token|refresh[_-]?token)[[:space:]]*=|AKIA[0-9A-Z]{16}|gh[pousr]_[A-Za-z0-9_]{36,}|-----BEGIN [A-Z ]*PRIVATE KEY-----)'
     if git grep --cached -n -I -E "$SECRET_PATTERN" -- "${STAGED_FILES[@]}"; then
         echo "ERROR: Potential credentials found in staged files. Commit blocked."
         exit 1

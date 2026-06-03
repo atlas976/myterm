@@ -25,3 +25,7 @@ Session.vim
 zsh/.secrets
 *.env
 .env.*
+*.pem
+*.key
+id_rsa*
+known_hosts

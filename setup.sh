@@ -1,10 +1,108 @@
 #!/bin/bash
 
-# Finde den exakten Ordner heraus, in dem DIESES Skript gerade liegt
+set -euo pipefail
+
+# Resolve the directory that contains this script.
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 echo "🚀 Bootstrapping 'myterm' environment from: $REPO_DIR"
 echo "------------------------------------------------------------------"
+echo "This script installs packages, links dotfiles, configures Codex, and creates ~/.secrets if needed."
+echo "Existing regular config files are backed up with a .backup suffix before replacement."
+echo "------------------------------------------------------------------"
+
+backup_file() {
+    local dest=$1
+    if [ -e "$dest" ] && [ ! -f "$dest" ] && [ ! -L "$dest" ]; then
+        echo "ERROR: $dest exists but is not a regular file or symlink."
+        exit 1
+    fi
+
+    if [ -f "$dest" ] && [ ! -L "$dest" ]; then
+        local backup="${dest}.backup"
+        if [ -e "$backup" ]; then
+            backup="${dest}.backup.$(date +%Y%m%d%H%M%S)"
+        fi
+        mv "$dest" "$backup"
+        echo "  -> Backed up existing file: $backup"
+    fi
+}
+
+link_file() {
+    local src=$1
+    local dest=$2
+    backup_file "$dest"
+    ln -sfn "$src" "$dest"
+    echo "  -> Linked $dest"
+}
+
+copy_file() {
+    local src=$1
+    local dest=$2
+    backup_file "$dest"
+    if [ -L "$dest" ]; then
+        rm "$dest"
+    fi
+    cp "$src" "$dest"
+    echo "  -> Copied $dest"
+}
+
+link_codex_skills() {
+    for skill_dir in "$REPO_DIR"/.agents/skills/*; do
+        [ -d "$skill_dir" ] || continue
+
+        local skill_name
+        local target
+        skill_name="$(basename "$skill_dir")"
+        target="$HOME/.agents/skills/$skill_name"
+
+        if [ -e "$target" ] && [ ! -L "$target" ]; then
+            local backup="${target}.backup"
+            if [ -e "$backup" ]; then
+                backup="${target}.backup.$(date +%Y%m%d%H%M%S)"
+            fi
+            mv "$target" "$backup"
+            echo "  -> Backed up existing Codex skill: $backup"
+        fi
+
+        ln -sfn "$skill_dir" "$target"
+        echo "  -> Linked Codex skill: $skill_name"
+    done
+}
+
+setup_secrets() {
+    local secrets_file="$HOME/.secrets"
+    local legacy_repo_secrets="$REPO_DIR/zsh/.secrets"
+
+    if [ -L "$secrets_file" ]; then
+        local target
+        target="$(readlink "$secrets_file")"
+        if [ "$target" = "$legacy_repo_secrets" ] && [ -f "$legacy_repo_secrets" ]; then
+            rm "$secrets_file"
+            cp "$legacy_repo_secrets" "$secrets_file"
+            chmod 600 "$secrets_file"
+            echo "  -> Migrated legacy repo-linked ~/.secrets to a real home file"
+        else
+            echo "  -> Existing ~/.secrets symlink found; leaving it untouched"
+        fi
+        return
+    fi
+
+    if [ -e "$secrets_file" ] && [ ! -f "$secrets_file" ]; then
+        echo "  -> Existing ~/.secrets is not a regular file; leaving it untouched"
+        return
+    fi
+
+    if [ ! -f "$secrets_file" ]; then
+        cp "$REPO_DIR/zsh/.secrets.example" "$secrets_file"
+        echo "  -> Created ~/.secrets from template"
+    else
+        echo "  -> Found existing ~/.secrets"
+    fi
+
+    chmod 600 "$secrets_file"
+    echo "  -> Restricted ~/.secrets permissions to owner-only"
+}
 
 # 1. Install Homebrew
 if ! command -v brew &> /dev/null; then
@@ -15,137 +113,64 @@ else
     echo "✅ Homebrew is already installed."
 fi
 
-# 2. Install Core Dependencies & Fonts
+# 2. Install core dependencies and fonts
 echo "📥 Installing core packages..."
 brew install git zsh neovim ripgrep fd tree-sitter-cli node fzf
-brew install --cask ghostty 
+brew install --cask ghostty
 brew install --cask nikitabobko/tap/aerospace
 brew install --cask karabiner-elements
 
-# Install Meslo Nerd Font (Required for Powerlevel10k icons)
+# Install Meslo Nerd Font. Powerlevel10k uses it for prompt symbols.
 echo "🔤 Installing Meslo Nerd Font..."
 brew install --cask font-meslo-lg-nerd-font
 
-# 3. Install Zsh Plugins (Powerlevel10k)
+# 3. Install Zsh plugins
 echo "🔌 Setting up Zsh Plugins..."
 if [ ! -d "$HOME/.powerlevel10k" ]; then
-    # Clone Powerlevel10k into a hidden folder in the home directory (standard practice)
-    git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ~/.powerlevel10k
+    git clone --depth=1 https://github.com/romkatv/powerlevel10k.git "$HOME/.powerlevel10k"
 fi
 
-# 4. Create Target Directories
+# 4. Create target directories
 echo "📁 Preparing system directories..."
-mkdir -p ~/.config/ghostty
-mkdir -p ~/.config/aerospace
-mkdir -p ~/.config/karabiner/assets/complex_modifications
-mkdir -p ~/.codex/scripts
-mkdir -p ~/.agents/skills
+mkdir -p "$HOME/.config/ghostty"
+mkdir -p "$HOME/.config/aerospace"
+mkdir -p "$HOME/.config/karabiner/assets/complex_modifications"
+mkdir -p "$HOME/.config/nvim"
+mkdir -p "$HOME/.codex/scripts"
+mkdir -p "$HOME/.agents/skills"
 
-# 5. Create Symlinks (Die Brücken bauen)
+# 5. Link configuration files
 echo "🔗 Symlinking configuration files..."
 
-# Karabiner-Elements
-if [ -f ~/.config/karabiner/karabiner.json ] && [ ! -L ~/.config/karabiner/karabiner.json ]; then
-    mv ~/.config/karabiner/karabiner.json ~/.config/karabiner/karabiner.json.backup
-    echo "  -> Backed up existing Karabiner config to karabiner.json.backup"
-fi
-cp "$REPO_DIR/karabiner/karabiner.json" ~/.config/karabiner/karabiner.json
-echo "  -> Copied full Karabiner-Elements config (Karabiner breaks symlinks)"
-
-# Ghostty
-if [ -f ~/.config/ghostty/config ] && [ ! -L ~/.config/ghostty/config ]; then
-    mv ~/.config/ghostty/config ~/.config/ghostty/config.backup
-    echo "  -> Backed up existing Ghostty config to config.backup"
-fi
-ln -sf "$REPO_DIR/ghostty/config" ~/.config/ghostty/config
-echo "  -> Linked Ghostty config"
-
-# AeroSpace
-if [ -f ~/.config/aerospace/aerospace.toml ] && [ ! -L ~/.config/aerospace/aerospace.toml ]; then
-    mv ~/.config/aerospace/aerospace.toml ~/.config/aerospace/aerospace.toml.backup
-    echo "  -> Backed up existing AeroSpace config to aerospace.toml.backup"
-fi
-ln -sf "$REPO_DIR/aerospace/aerospace.toml" ~/.config/aerospace/aerospace.toml
-echo "  -> Linked AeroSpace config"
-
-# Neovim
-mkdir -p ~/.config/nvim
-if [ -f ~/.config/nvim/init.lua ] && [ ! -L ~/.config/nvim/init.lua ]; then
-    mv ~/.config/nvim/init.lua ~/.config/nvim/init.lua.backup
-    echo "  -> Backed up existing Neovim init.lua to init.lua.backup"
-fi
-ln -sf "$REPO_DIR/nvim/init.lua" ~/.config/nvim/init.lua
-echo "  -> Linked Neovim config (Kickstart)"
-
-# Zsh
-if [ -f ~/.zshrc ] && [ ! -L ~/.zshrc ]; then
-    mv ~/.zshrc ~/.zshrc.backup
-    echo "  -> Backed up existing ~/.zshrc to ~/.zshrc.backup"
-fi
-ln -sf "$REPO_DIR/zsh/.zshrc" ~/.zshrc
-echo "  -> Linked Zsh config"
-
-# Powerlevel10k
-if [ -f ~/.p10k.zsh ] && [ ! -L ~/.p10k.zsh ]; then
-    mv ~/.p10k.zsh ~/.p10k.zsh.backup
-    echo "  -> Backed up existing ~/.p10k.zsh to ~/.p10k.zsh.backup"
-fi
-ln -sf "$REPO_DIR/zsh/.p10k.zsh" ~/.p10k.zsh
-echo "  -> Linked Powerlevel10k config"
+# Karabiner-Elements reloads can replace symlinks, so copy this file.
+copy_file "$REPO_DIR/karabiner/karabiner.json" "$HOME/.config/karabiner/karabiner.json"
+link_file "$REPO_DIR/ghostty/config" "$HOME/.config/ghostty/config"
+link_file "$REPO_DIR/aerospace/aerospace.toml" "$HOME/.config/aerospace/aerospace.toml"
+link_file "$REPO_DIR/nvim/init.lua" "$HOME/.config/nvim/init.lua"
+link_file "$REPO_DIR/zsh/.zshrc" "$HOME/.zshrc"
+link_file "$REPO_DIR/zsh/.p10k.zsh" "$HOME/.p10k.zsh"
 
 # Codex Global Configuration
 echo "🔗 Symlinking Codex configuration..."
-if [ -L ~/agent-coding ]; then
-    rm ~/agent-coding
+if [ -L "$HOME/agent-coding" ]; then
+    rm "$HOME/agent-coding"
     echo "  -> Removed legacy ~/agent-coding symlink"
-elif [ -d ~/agent-coding ]; then
+elif [ -d "$HOME/agent-coding" ]; then
     echo "  -> Found legacy ~/agent-coding directory; leaving it untouched"
 fi
 
-if [ -f ~/.codex/AGENTS.md ] && [ ! -L ~/.codex/AGENTS.md ]; then
-    mv ~/.codex/AGENTS.md ~/.codex/AGENTS.md.backup
-    echo "  -> Backed up existing Codex AGENTS.md to AGENTS.md.backup"
-fi
-ln -sf "$REPO_DIR/codex/AGENTS.md" ~/.codex/AGENTS.md
-echo "  -> Linked global Codex AGENTS.md"
-
-ln -sf "$REPO_DIR/codex/scripts/safe_commit.sh" ~/.codex/scripts/safe_commit.sh
-echo "  -> Linked Codex safe_commit helper"
-
-for skill_dir in "$REPO_DIR"/.agents/skills/*; do
-    if [ -d "$skill_dir" ]; then
-        skill_name="$(basename "$skill_dir")"
-        target="$HOME/.agents/skills/$skill_name"
-        if [ -e "$target" ] && [ ! -L "$target" ]; then
-            mv "$target" "$target.backup"
-            echo "  -> Backed up existing Codex skill: $skill_name"
-        fi
-        ln -sfn "$skill_dir" "$target"
-        echo "  -> Linked Codex skill: $skill_name"
-    fi
-done
+link_file "$REPO_DIR/codex/AGENTS.md" "$HOME/.codex/AGENTS.md"
+link_file "$REPO_DIR/codex/scripts/safe_commit.sh" "$HOME/.codex/scripts/safe_commit.sh"
+link_codex_skills
 
 # Secrets
-if [ -f ~/.secrets ] && [ ! -L ~/.secrets ]; then
-    mv ~/.secrets ~/.secrets.backup
-    echo "  -> Backed up existing ~/.secrets to ~/.secrets.backup"
-fi
-
-if [ ! -f "$REPO_DIR/zsh/.secrets" ]; then
-    echo "# Add your API keys and secrets here" > "$REPO_DIR/zsh/.secrets"
-    echo "  -> Created empty .secrets file in repo"
-fi
-# CRITICAL SECURITY: Restrict file permissions so other users cannot read the secrets
-chmod 600 "$REPO_DIR/zsh/.secrets"
-
-ln -sf "$REPO_DIR/zsh/.secrets" ~/.secrets
-echo "  -> Linked Secrets file"
+setup_secrets
 
 # 6. Make Zsh the default shell
-CURRENT_SHELL=$(dscl . -read /Users/"$USER" UserShell | awk '{print $2}')
+CURRENT_SHELL=$(dscl . -read "/Users/$USER" UserShell | awk '{print $2}')
 if [ "$CURRENT_SHELL" != "/bin/zsh" ]; then
     echo "🔄 Changing default shell to Zsh..."
-    chsh -s "$(which zsh)"
+    chsh -s "$(command -v zsh)"
 fi
 
 echo "------------------------------------------------------------------"

@@ -4,6 +4,9 @@
 vim.g.mapleader = ' '
 vim.g.maplocalleader = ' '
 
+-- MYTERM: This file is based on Kickstart.nvim.
+-- Search for "MYTERM:" to find repo-specific choices.
+
 -- Set to true if you have a Nerd Font installed and selected in the terminal
 vim.g.have_nerd_font = false
 
@@ -509,6 +512,7 @@ require('lazy').setup({
         end,
       })
 
+      -- MYTERM: Personal language server and formatter choices.
       -- Enable the following language servers
       --  Feel free to add/remove any LSPs that you want here. They will automatically be installed.
       --  See `:help lsp-config` for information about keys and how to configure
@@ -746,7 +750,8 @@ require('lazy').setup({
     },
   },
 
-  { -- You can easily change to a different colorscheme.
+  { -- MYTERM: Personal colorscheme.
+    -- You can easily change to a different colorscheme.
     -- Change the name of the colorscheme plugin below, and then
     -- change the command in the config to whatever the name of that colorscheme is.
     --
@@ -882,7 +887,7 @@ require('lazy').setup({
   -- init.lua. If you want these files, they are in the repository, so you can just download them and
   -- place them in the correct locations.
 
-  {
+  { -- MYTERM: File explorer.
     "nvim-neo-tree/neo-tree.nvim",
     version = "*",
     dependencies = {
