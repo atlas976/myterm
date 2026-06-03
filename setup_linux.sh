@@ -57,6 +57,8 @@ echo "📁 Preparing system directories..."
 mkdir -p ~/.config/ghostty
 mkdir -p ~/.config/nvim
 mkdir -p ~/.config/i3
+mkdir -p ~/.codex/scripts
+mkdir -p ~/.agents/skills
 
 # 7. Symlinks erstellen (mit Helfer-Funktion für sauberen Code)
 echo "🔗 Symlinking configuration files..."
@@ -78,28 +80,30 @@ link_file "$REPO_DIR/nvim/init.lua" ~/.config/nvim/init.lua
 link_file "$REPO_DIR/zsh/.zshrc" ~/.zshrc
 link_file "$REPO_DIR/zsh/.p10k.zsh" ~/.p10k.zsh
 
-# Agent Global Configuration
-# Symlink the entire agent-coding directory so any CLI agent (Gemini, Claude, Codex)
-# can pick up its configuration files globally without hardcoding here.
-if [ -d ~/agent-coding ] && [ ! -L ~/agent-coding ]; then
-    mv ~/agent-coding ~/agent-coding.backup
-    echo "  -> Backed up existing ~/agent-coding directory to ~/agent-coding.backup"
+# Codex Global Configuration
+echo "🔗 Symlinking Codex configuration..."
+if [ -L ~/agent-coding ]; then
+    rm ~/agent-coding
+    echo "  -> Removed legacy ~/agent-coding symlink"
+elif [ -d ~/agent-coding ]; then
+    echo "  -> Found legacy ~/agent-coding directory; leaving it untouched"
 fi
-ln -sfn "$REPO_DIR/agent-coding" ~/agent-coding
-echo "  -> Linked generic agent-coding directory"
 
-# Install Agent Skills
-echo "🧠 Installing agent skills..."
-if command -v gemini &> /dev/null; then
-    for skill in "$REPO_DIR"/agent-coding/skills/*.skill; do
-        if [ -f "$skill" ]; then
-            echo "  -> Installing skill: $(basename "$skill")"
-            gemini skills install "$skill" --scope user --consent
+link_file "$REPO_DIR/codex/AGENTS.md" ~/.codex/AGENTS.md
+link_file "$REPO_DIR/codex/scripts/safe_commit.sh" ~/.codex/scripts/safe_commit.sh
+
+for skill_dir in "$REPO_DIR"/.agents/skills/*; do
+    if [ -d "$skill_dir" ]; then
+        skill_name="$(basename "$skill_dir")"
+        target="$HOME/.agents/skills/$skill_name"
+        if [ -e "$target" ] && [ ! -L "$target" ]; then
+            mv "$target" "$target.backup"
+            echo "  -> Backed up existing Codex skill: $skill_name"
         fi
-    done
-else
-    echo "  -> Gemini CLI not found. Skipping automatic skill installation."
-fi
+        ln -sfn "$skill_dir" "$target"
+        echo "  -> Linked Codex skill: $skill_name"
+    fi
+done
 
 # Secrets
 if [ ! -f "$REPO_DIR/zsh/.secrets" ]; then

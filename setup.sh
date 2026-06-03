@@ -38,6 +38,8 @@ echo "📁 Preparing system directories..."
 mkdir -p ~/.config/ghostty
 mkdir -p ~/.config/aerospace
 mkdir -p ~/.config/karabiner/assets/complex_modifications
+mkdir -p ~/.codex/scripts
+mkdir -p ~/.agents/skills
 
 # 5. Create Symlinks (Die Brücken bauen)
 echo "🔗 Symlinking configuration files..."
@@ -91,29 +93,37 @@ fi
 ln -sf "$REPO_DIR/zsh/.p10k.zsh" ~/.p10k.zsh
 echo "  -> Linked Powerlevel10k config"
 
-# Agent Global Configuration
-echo "🔗 Symlinking agent configuration..."
-if [ -d ~/agent-coding ] && [ ! -L ~/agent-coding ]; then
-    mv ~/agent-coding ~/agent-coding.backup
-    echo "  -> Backed up existing ~/agent-coding directory to ~/agent-coding.backup"
+# Codex Global Configuration
+echo "🔗 Symlinking Codex configuration..."
+if [ -L ~/agent-coding ]; then
+    rm ~/agent-coding
+    echo "  -> Removed legacy ~/agent-coding symlink"
+elif [ -d ~/agent-coding ]; then
+    echo "  -> Found legacy ~/agent-coding directory; leaving it untouched"
 fi
-# Symlink the entire agent-coding directory so any CLI agent (Gemini, Claude, Codex)
-# can pick up its configuration files globally without hardcoding here.
-ln -sfn "$REPO_DIR/agent-coding" ~/agent-coding
-echo "  -> Linked generic agent-coding directory"
 
-# Install Agent Skills
-echo "🧠 Installing agent skills..."
-if command -v gemini &> /dev/null; then
-    for skill in "$REPO_DIR"/agent-coding/skills/*.skill; do
-        if [ -f "$skill" ]; then
-            echo "  -> Installing skill: $(basename "$skill")"
-            gemini skills install "$skill" --scope user --consent
-        fi
-    done
-else
-    echo "  -> Gemini CLI not found. Skipping automatic skill installation."
+if [ -f ~/.codex/AGENTS.md ] && [ ! -L ~/.codex/AGENTS.md ]; then
+    mv ~/.codex/AGENTS.md ~/.codex/AGENTS.md.backup
+    echo "  -> Backed up existing Codex AGENTS.md to AGENTS.md.backup"
 fi
+ln -sf "$REPO_DIR/codex/AGENTS.md" ~/.codex/AGENTS.md
+echo "  -> Linked global Codex AGENTS.md"
+
+ln -sf "$REPO_DIR/codex/scripts/safe_commit.sh" ~/.codex/scripts/safe_commit.sh
+echo "  -> Linked Codex safe_commit helper"
+
+for skill_dir in "$REPO_DIR"/.agents/skills/*; do
+    if [ -d "$skill_dir" ]; then
+        skill_name="$(basename "$skill_dir")"
+        target="$HOME/.agents/skills/$skill_name"
+        if [ -e "$target" ] && [ ! -L "$target" ]; then
+            mv "$target" "$target.backup"
+            echo "  -> Backed up existing Codex skill: $skill_name"
+        fi
+        ln -sfn "$skill_dir" "$target"
+        echo "  -> Linked Codex skill: $skill_name"
+    fi
+done
 
 # Secrets
 if [ -f ~/.secrets ] && [ ! -L ~/.secrets ]; then

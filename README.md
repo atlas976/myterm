@@ -9,7 +9,7 @@ Welcome to `myterm`, a meticulously crafted, blazingly fast, and keyboard-centri
 * **Keyboard Customizer (macOS):** Karabiner-Elements (Maps Caps Lock to Cmd+Ctrl+Alt / Escape).
 * **Shell:** Zsh with Powerlevel10k (Extremely fast, Git-aware prompt).
 * **Editor:** Neovim with [Kickstart.nvim](https://github.com/nvim-lua/kickstart.nvim) (A starting point for a fast, modern Lua-based IDE).
-* **AI Agent:** Agnostic CLI Agent Configuration (e.g., Gemini CLI, Claude Code) with strict sandboxing.
+* **AI Agent:** Codex with repo guidance, reusable skills, and safe commit checks.
 * **Fuzzy Finder:** fzf (Instant command-line search for files and history via `Ctrl+T` / `Ctrl+R`).
 * **Theme:** Gruvbox Dark (Warm, earthy tones, easy on the eyes). To see more themes run 
 ```bash 
@@ -35,12 +35,14 @@ During the initial `./setup.sh` execution, **Homebrew will ask for your Mac pass
 
 ```text
 ~/myterm/
-├── agent-coding/    # AI Assistant Brain and Rules (Gemini, Claude, etc.)
-│   ├── GEMINI.md    # Agent personas and strict security rules
-│   ├── .geminiignore # Firewall against reading sensitive data
-│   └── skills/      # Modular tools and scripts (e.g., safe_commit.sh)
+├── AGENTS.md        # Codex instructions for this repository
+├── .agents/
+│   └── skills/      # Codex repo/user skills
 ├── aerospace/
 │   └── aerospace.toml # AeroSpace tiling window manager configuration
+├── codex/
+│   ├── AGENTS.md    # Global Codex guidance linked to ~/.codex/AGENTS.md
+│   └── scripts/     # Codex helper scripts
 ├── ghostty/
 │   └── config       # Ghostty terminal configuration
 ├── i3/
@@ -53,6 +55,8 @@ During the initial `./setup.sh` execution, **Homebrew will ask for your Mac pass
 ├── setup.sh         # The automated bootstrap script
 └── README.md        # This documentation
 ```
+
+The setup scripts link `codex/AGENTS.md` to `~/.codex/AGENTS.md`, link `codex/scripts/safe_commit.sh` to `~/.codex/scripts/safe_commit.sh`, and expose `.agents/skills/*` as user-scoped Codex skills under `~/.agents/skills`.
 
 ## 🛠️ Installation on a New Machine
 This setup is entirely portable. You can clone this repository to any location on your machine, and the setup scripts will automatically resolve the correct paths.
