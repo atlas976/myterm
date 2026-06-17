@@ -25,7 +25,7 @@ sudo apt-get update -y
 
 # 3. Install core dependencies via apt.
 echo "📥 Installing core packages (Git, Zsh, Neovim, Ghostty, i3, Node.js, etc.)..."
-sudo apt-get install -y git zsh neovim ghostty i3 ripgrep fd-find nodejs npm fzf
+sudo apt-get install -y git zsh neovim ghostty i3 ripgrep fd-find nodejs npm fzf build-essential tree-sitter-cli
 
 # Ubuntu package names the fd binary fdfind, while many tools expect fd.
 mkdir -p "$HOME/.local/bin"
@@ -91,6 +91,31 @@ link_file() {
     echo "  -> Linked $dest"
 }
 
+link_dir() {
+    local src=$1
+    local dest=$2
+    if [ -e "$dest" ] && [ ! -d "$dest" ] && [ ! -L "$dest" ]; then
+        echo "ERROR: $dest exists but is not a directory or symlink."
+        exit 1
+    fi
+
+    if [ -d "$dest" ] && [ ! -L "$dest" ]; then
+        local backup="${dest}.backup"
+        if [ -e "$backup" ]; then
+            backup="${dest}.backup.$(date +%Y%m%d%H%M%S)"
+        fi
+        mv "$dest" "$backup"
+        echo "  -> Backed up existing directory: $backup"
+    fi
+
+    if [ -L "$dest" ]; then
+        rm "$dest"
+    fi
+
+    ln -s "$src" "$dest"
+    echo "  -> Linked $dest"
+}
+
 link_codex_skills() {
     for skill_dir in "$REPO_DIR"/.agents/skills/*; do
         [ -d "$skill_dir" ] || continue
@@ -152,6 +177,7 @@ setup_secrets() {
 link_file "$REPO_DIR/ghostty/config" "$HOME/.config/ghostty/config"
 link_file "$REPO_DIR/i3/config" "$HOME/.config/i3/config"
 link_file "$REPO_DIR/nvim/init.lua" "$HOME/.config/nvim/init.lua"
+link_dir "$REPO_DIR/nvim/lua" "$HOME/.config/nvim/lua"
 link_file "$REPO_DIR/zsh/.zshrc" "$HOME/.zshrc"
 link_file "$REPO_DIR/zsh/.p10k.zsh" "$HOME/.p10k.zsh"
 

@@ -36,6 +36,31 @@ link_file() {
     echo "  -> Linked $dest"
 }
 
+link_dir() {
+    local src=$1
+    local dest=$2
+    if [ -e "$dest" ] && [ ! -d "$dest" ] && [ ! -L "$dest" ]; then
+        echo "ERROR: $dest exists but is not a directory or symlink."
+        exit 1
+    fi
+
+    if [ -d "$dest" ] && [ ! -L "$dest" ]; then
+        local backup="${dest}.backup"
+        if [ -e "$backup" ]; then
+            backup="${dest}.backup.$(date +%Y%m%d%H%M%S)"
+        fi
+        mv "$dest" "$backup"
+        echo "  -> Backed up existing directory: $backup"
+    fi
+
+    if [ -L "$dest" ]; then
+        rm "$dest"
+    fi
+
+    ln -s "$src" "$dest"
+    echo "  -> Linked $dest"
+}
+
 copy_file() {
     local src=$1
     local dest=$2
@@ -147,6 +172,7 @@ copy_file "$REPO_DIR/karabiner/karabiner.json" "$HOME/.config/karabiner/karabine
 link_file "$REPO_DIR/ghostty/config" "$HOME/.config/ghostty/config"
 link_file "$REPO_DIR/aerospace/aerospace.toml" "$HOME/.config/aerospace/aerospace.toml"
 link_file "$REPO_DIR/nvim/init.lua" "$HOME/.config/nvim/init.lua"
+link_dir "$REPO_DIR/nvim/lua" "$HOME/.config/nvim/lua"
 link_file "$REPO_DIR/zsh/.zshrc" "$HOME/.zshrc"
 link_file "$REPO_DIR/zsh/.p10k.zsh" "$HOME/.p10k.zsh"
 

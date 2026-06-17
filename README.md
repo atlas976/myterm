@@ -8,7 +8,7 @@ Personal dotfiles for a terminal-first development setup on macOS Apple Silicon 
 | --- | --- |
 | Terminal | Ghostty |
 | Shell | Zsh, Powerlevel10k, fzf |
-| Editor | Neovim based on Kickstart.nvim |
+| Editor | Neovim with Telescope, nvim-tree, LSP, and completion |
 | macOS window manager | AeroSpace |
 | Linux window manager | i3 |
 | macOS keyboard remapping | Karabiner-Elements |
@@ -23,7 +23,7 @@ ghostty +list-themes
 
 ## What Setup Does
 
-The setup scripts install packages, create config directories, back up existing regular config files with a `.backup` suffix, and link or copy this repo's configs into place.
+The setup scripts install packages, create config directories, back up existing regular config files with a `.backup` suffix, and link or copy this repo's configs into place. Neovim links both `nvim/init.lua` and the modular `nvim/lua` config directory.
 
 Karabiner config is copied instead of symlinked because Karabiner-Elements can replace symlinks while reloading. If you change `karabiner/karabiner.json`, rerun `./setup.sh`.
 
@@ -98,7 +98,9 @@ You do not need to open Karabiner manually after every restart.
 ├── i3/
 │   └── config                # i3 config for Linux
 ├── nvim/
-│   └── init.lua              # Neovim config
+│   ├── init.lua              # Neovim entry point
+│   ├── BEGINNER_TUTORIAL.md  # Neovim help references
+│   └── lua/myterm/           # Neovim config modules
 ├── zsh/
 │   ├── .zshrc                # Zsh config
 │   ├── .p10k.zsh             # Powerlevel10k config
@@ -123,28 +125,15 @@ AeroSpace has a macOS catch-all rule. i3 routes only the known app classes liste
 
 ## Shortcuts
 
-### Neo-tree
+### Neovim
 
-File management:
-1. `a` - Create a file or directory. Add a trailing `/` for a directory.
-2. `r` - Rename the file or directory under the cursor.
-3. `d` - Delete the selected file or directory after confirmation.
-4. `c` - Copy the file or directory into the explorer clipboard.
-5. `x` - Cut the file or directory.
-6. `p` - Paste the copied or cut file at the current location.
-7. `y` - Copy the file name or absolute path to the system clipboard.
-
-Opening files:
-1. `<Enter>` / `o` - Open the file in the main window or toggle a directory.
-2. `v` - Open the file in a vertical split.
-3. `s` - Open the file in a horizontal split.
-4. `t` - Open the file in a Neovim tab.
-
-View and navigation:
-1. `R` - Reload the file explorer.
-2. `H` - Toggle hidden files.
-3. `I` - Toggle files ignored by `.gitignore`.
-4. `W` - Collapse all open directories.
+1. `\` - Toggle the file tree sidebar.
+2. `<Space>sf` - Find files with Telescope.
+3. `<Space>sg` - Live grep with Telescope.
+4. `<Space><Space>` - Switch buffers with Telescope.
+5. `<Space>f` - Format the current buffer.
+6. `<Tab>` - Accept the selected completion item.
+7. `<Ctrl-j>` / `<Ctrl-k>` - Select the next or previous completion item.
 
 ### AeroSpace
 
