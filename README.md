@@ -157,3 +157,8 @@ Caps Lock is mapped by Karabiner to `cmd` + `alt` + `ctrl` when held and Escape 
 6. `Super` + `shift` + `space` - Toggle floating/tiling.
 7. `Super` + `,` - Use tabbed layout.
 8. `Super` + `Enter` - Open Ghostty.
+
+## TODO
+
+1. Configure the Codex UI through a symlinked `codex.toml`.
+2. Configure a custom terminal command for Copilot activation.
