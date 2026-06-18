@@ -20,6 +20,7 @@ require('lazy').setup({
   require 'myterm.plugins.lsp',
   require 'myterm.plugins.formatting',
   require 'myterm.plugins.completion',
+  require 'myterm.plugins.copilot',
   require 'myterm.plugins.colorscheme',
   require 'myterm.plugins.todo-comments',
   require 'myterm.plugins.mini',

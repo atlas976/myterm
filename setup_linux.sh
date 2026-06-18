@@ -16,16 +16,24 @@ echo "------------------------------------------------------------------"
 echo "🔄 Updating package sources..."
 sudo apt-get update -y
 
-# 2. Add PPAs for current Neovim and Ghostty packages.
-echo "📦 Adding repositories for Neovim and Ghostty..."
-sudo apt-get install -y software-properties-common curl wget unzip fontconfig
+# 2. Add repositories for current Neovim, Ghostty, and Node.js packages.
+echo "📦 Adding repositories for Neovim, Ghostty, and Node.js..."
+sudo apt-get install -y software-properties-common curl wget unzip fontconfig ca-certificates gnupg
 sudo add-apt-repository ppa:neovim-ppa/stable -y
 sudo add-apt-repository ppa:mkasberg/ghostty-ubuntu -y
+curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
 sudo apt-get update -y
 
 # 3. Install core dependencies via apt.
 echo "📥 Installing core packages (Git, Zsh, Neovim, Ghostty, i3, Node.js, etc.)..."
-sudo apt-get install -y git zsh neovim ghostty i3 ripgrep fd-find nodejs npm fzf build-essential tree-sitter-cli
+sudo apt-get install -y git zsh neovim ghostty i3 ripgrep fd-find nodejs fzf build-essential
+
+# The tree-sitter CLI is needed by some Neovim parser workflows. Install it
+# through npm because the apt package is not available on every Ubuntu release.
+if ! command -v tree-sitter > /dev/null 2>&1; then
+    sudo npm install -g tree-sitter-cli
+    echo "🔧 Installed tree-sitter CLI through npm."
+fi
 
 # Ubuntu package names the fd binary fdfind, while many tools expect fd.
 mkdir -p "$HOME/.local/bin"

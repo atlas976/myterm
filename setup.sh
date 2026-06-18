@@ -139,7 +139,7 @@ else
 fi
 
 # 2. Install core dependencies and fonts
-echo "📥 Installing core packages..."
+echo "📥 Installing core packages (Git, Zsh, Neovim, Node.js, etc.)..."
 brew install git zsh neovim ripgrep fd tree-sitter-cli node fzf
 brew install --cask ghostty
 brew install --cask nikitabobko/tap/aerospace

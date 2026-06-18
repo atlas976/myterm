@@ -8,7 +8,7 @@ Personal dotfiles for a terminal-first development setup on macOS Apple Silicon 
 | --- | --- |
 | Terminal | Ghostty |
 | Shell | Zsh, Powerlevel10k, fzf |
-| Editor | Neovim with Telescope, nvim-tree, LSP, and completion |
+| Editor | Neovim with Telescope, nvim-tree, LSP, completion, and optional Copilot setup |
 | macOS window manager | AeroSpace |
 | Linux window manager | i3 |
 | macOS keyboard remapping | Karabiner-Elements |
@@ -60,7 +60,15 @@ chmod +x setup_linux.sh
 ./setup_linux.sh
 ```
 
-The Linux script is written for Ubuntu-style systems with `apt` and PPAs.
+The Linux script is written for Ubuntu-style systems with `apt` and PPAs. It installs Node.js 22 from NodeSource so the Copilot language server works on fresh machines.
+
+### Optional Copilot Branch
+
+The `copilot-setup` branch contains the GitHub Copilot config. Keep using `main` for the non-Copilot setup, or switch to the Copilot branch before running the setup script:
+
+```bash
+git checkout copilot-setup
+```
 
 ## Manual macOS Steps
 
@@ -134,6 +142,15 @@ AeroSpace has a macOS catch-all rule. i3 routes only the known app classes liste
 5. `<Space>f` - Format the current buffer.
 6. `<Tab>` - Accept the selected completion item.
 7. `<Ctrl-j>` / `<Ctrl-k>` - Select the next or previous completion item.
+8. `<Ctrl-l>` - Accept a Copilot inline suggestion.
+9. `<Ctrl-]>` - Dismiss the visible Copilot suggestion.
+
+Copilot setup branch:
+- open Neovim and run `:Copilot auth` once to sign in
+- use `:Copilot status` to check whether Copilot is attached
+- Copilot requires a GitHub Copilot plan or available free quota
+- the `copilot-setup` branch uses `zbirenbaum/copilot.lua`, which expects Neovim 0.11+ and Node.js 22+ for the default Copilot language server
+- Copilot uses control-key mappings because macOS Option-key mappings can insert layout-specific characters like `@` or `¥`
 
 ### AeroSpace
 
