@@ -8,7 +8,7 @@ Personal dotfiles for a terminal-first development setup on macOS Apple Silicon 
 | --- | --- |
 | Terminal | Ghostty |
 | Shell | Zsh, Powerlevel10k, fzf |
-| Editor | Neovim with Telescope, nvim-tree, LSP, and completion |
+| Editor | Neovim with Telescope, nvim-tree, LSP, completion, and optional Copilot |
 | macOS window manager | AeroSpace |
 | Linux window manager | i3 |
 | macOS keyboard remapping | Karabiner-Elements |
@@ -27,10 +27,20 @@ The setup scripts install packages, create config directories, back up existing 
 
 Karabiner config is copied instead of symlinked because Karabiner-Elements can replace symlinks while reloading. If you change `karabiner/karabiner.json`, rerun `./setup.sh`.
 
+Setup flags:
+- `--dry-run` prints the actions without installing packages, changing files, or changing the default shell
+- `--no-install` skips package manager, font, and plugin installation steps
+- `--no-shell-change` skips the default shell change
+- `--headless` on Linux skips GUI packages, fonts, and desktop configs for command-line-only machines
+
 Codex setup:
 - links `codex/AGENTS.md` to `~/.codex/AGENTS.md`
 - links `codex/scripts/safe_commit.sh` to `~/.codex/scripts/safe_commit.sh`
 - links `.agents/skills/*` into `~/.agents/skills`
+
+Copilot setup:
+- the optional Copilot toggle is controlled inside Neovim with `:mycp enable|disable|toggle|status`
+- stores Copilot on/off state outside the repo at `~/.config/myterm/copilot-enabled`
 
 Secrets:
 - setup creates `~/.secrets` from `zsh/.secrets.example` on fresh machines
@@ -60,7 +70,15 @@ chmod +x setup_linux.sh
 ./setup_linux.sh
 ```
 
-The Linux script is written for Ubuntu-style systems with `apt` and PPAs.
+The Linux script is written for Ubuntu-style systems with `apt` and PPAs. It installs Node.js 22 from NodeSource so the optional Copilot language server works on fresh machines.
+
+For headless Linux machines such as a Raspberry Pi without a GUI, use:
+
+```bash
+./setup_linux.sh --headless
+```
+
+Headless mode detects `apt-get`, `pacman`, or `dnf` and installs distro CLI packages only. It does not add Ubuntu PPAs or install Ghostty, i3, or fonts. It links only CLI-relevant configs such as Zsh, Neovim, Codex, and secrets setup. On unsupported package managers, install the packages manually and rerun with `./setup_linux.sh --headless --no-install`. On older distro releases, the distro `neovim` package may be too old for this config and the distro `nodejs` package may be too old for Copilot; update them separately if needed.
 
 ## Manual macOS Steps
 
@@ -101,6 +119,8 @@ You do not need to open Karabiner manually after every restart.
 │   ├── init.lua              # Neovim entry point
 │   ├── BEGINNER_TUTORIAL.md  # Neovim help references
 │   └── lua/myterm/           # Neovim config modules
+├── scripts/
+│   └── lib_setup.sh          # Shared setup helpers
 ├── zsh/
 │   ├── .zshrc                # Zsh config
 │   ├── .p10k.zsh             # Powerlevel10k config
@@ -134,6 +154,29 @@ AeroSpace has a macOS catch-all rule. i3 routes only the known app classes liste
 5. `<Space>f` - Format the current buffer.
 6. `<Tab>` - Accept the selected completion item.
 7. `<Ctrl-j>` / `<Ctrl-k>` - Select the next or previous completion item.
+8. `<Ctrl-l>` - Accept a Copilot inline suggestion when Copilot is enabled.
+9. `<Ctrl-]>` - Dismiss the visible Copilot suggestion.
+
+### Optional Copilot
+
+The Copilot config is present but opt-in. Use the Neovim command to enable or disable it:
+
+```vim
+:mycp enable
+:mycp disable
+:mycp toggle
+:mycp status
+```
+
+Neovim stores this internally as `:Mycp` because custom commands must start with an uppercase letter. Typing `:mycp ...` in the command line expands to `:Mycp ...`.
+
+First-time use still requires Neovim authentication:
+
+```vim
+:Copilot auth
+```
+
+Copilot requires a GitHub Copilot plan or available free quota. The toggle state lives outside this repo at `~/.config/myterm/copilot-enabled`, so it cannot be committed by accident.
 
 ### AeroSpace
 
@@ -161,4 +204,3 @@ Caps Lock is mapped by Karabiner to `cmd` + `alt` + `ctrl` when held and Escape 
 ## TODO
 
 1. Configure the Codex UI through a symlinked `codex.toml`.
-2. Configure a custom terminal command for Copilot activation.
