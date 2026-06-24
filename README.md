@@ -42,6 +42,11 @@ Copilot setup:
 - the optional Copilot toggle is controlled inside Neovim with `:mycp enable|disable|toggle|status`
 - stores Copilot on/off state outside the repo at `~/.config/myterm/copilot-enabled`
 
+Neovim plugin versions:
+- lazy.nvim writes plugin pins to `nvim/lazy-lock.json`
+- after intentional plugin updates with `:Lazy update`, commit the lockfile if Neovim still works as expected
+- on a fresh machine, use `:Lazy restore` to install the locked plugin revisions
+
 Secrets:
 - setup creates `~/.secrets` from `zsh/.secrets.example` on fresh machines
 - setup sets `chmod 600 ~/.secrets`

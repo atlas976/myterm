@@ -1,4 +1,5 @@
 local config_dir = vim.fn.fnamemodify(vim.fn.resolve(vim.fn.expand '<sfile>:p'), ':h')
+vim.g.myterm_config_dir = config_dir
 
 package.path = table.concat({
   config_dir .. '/lua/?.lua',

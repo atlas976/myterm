@@ -60,39 +60,39 @@ cmd-alt-ctrl-comma = 'layout accordion'
 
 # --- Window Rules ---
 
-# Vivaldi: full screen in window one
+# Vivaldi: route to workspace 1
 [[on-window-detected]]
 if.app-id = 'com.vivaldi.Vivaldi'
 run = ['move-node-to-workspace 1']
 
-# Ghostty: window three across the whole window
+# Ghostty: route to workspace 3 as a floating window
 [[on-window-detected]]
 if.app-id = 'com.mitchellh.ghostty'
 run = ['layout floating', 'move-node-to-workspace 3']
 # run = ['move-node-to-workspace 3', 'fullscreen']
 
-# Communication in 2
-# Outlook wird immer mit Gewalt ganz nach links geschoben
+# Communication apps: route to workspace 2
+# Outlook: keep left in the accordion layout
 [[on-window-detected]]
 if.app-id = 'com.microsoft.Outlook'
 run = ['move-node-to-workspace 2', 'layout accordion', 'move left', 'move left']
 
-# Slack bleibt normal
+# Slack: keep the default accordion position
 [[on-window-detected]]
 if.app-id = 'com.tinyspeck.slackmacgap'
 run = ['move-node-to-workspace 2', 'layout accordion']
 
-# WhatsApp wird immer mit Gewalt ganz nach rechts geschoben
+# WhatsApp: keep right in the accordion layout
 [[on-window-detected]]
 if.app-id = 'net.whatsapp.WhatsApp'
 run = ['move-node-to-workspace 2', 'layout accordion', 'move right', 'move right']
 
-# Spotify: full screen in window five
+# Spotify: route to workspace 4
 [[on-window-detected]]
 if.app-id = 'com.spotify.client'
 run = ['move-node-to-workspace 4']
 
-# General catch-all: move to window five
+# General catch-all: move to workspace 5
 # This rule MUST be last as AeroSpace matches in order and usually stops at the first match
 # Note: we use 'check-further-callbacks = false' implicitly as it's the default.
 [[on-window-detected]]
