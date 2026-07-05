@@ -331,6 +331,7 @@ link_codex_config() {
         echo "  -> Found legacy ~/agent-coding directory; leaving it untouched"
     fi
 
+    copy_file "$REPO_DIR/codex/config.toml" "$HOME/.codex/config.toml"
     link_file "$REPO_DIR/codex/AGENTS.md" "$HOME/.codex/AGENTS.md"
     link_file "$REPO_DIR/codex/scripts/safe_commit.sh" "$HOME/.codex/scripts/safe_commit.sh"
     link_codex_skills

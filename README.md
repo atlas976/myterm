@@ -34,9 +34,13 @@ Setup flags:
 - `--headless` on Linux skips GUI packages, fonts, and desktop configs for command-line-only machines
 
 Codex setup:
+- copies `codex/config.toml` to `~/.codex/config.toml`
 - links `codex/AGENTS.md` to `~/.codex/AGENTS.md`
 - links `codex/scripts/safe_commit.sh` to `~/.codex/scripts/safe_commit.sh`
 - links `.agents/skills/*` into `~/.agents/skills`
+- enables Codex UI and app capabilities by default, including live web search, goals, apps/connectors, plugins, in-app browser and browser use, Computer Use, image generation, memories, multi-agent workflows, tool suggestions, notifications, animations, and automatic approval review
+- keeps Codex sandboxing at `workspace-write`; shell network access remains off by default, while the Codex web search tool uses `web_search = "live"`
+- Browser, Computer Use, connectors, and plugins may still require one-time app installation, sign-in, or OS permissions inside Codex
 
 Copilot setup:
 - the optional Copilot toggle is controlled inside Neovim with `:mycp enable|disable|toggle|status`
@@ -114,6 +118,7 @@ You do not need to open Karabiner manually after every restart.
 ├── aerospace/
 │   └── aerospace.toml        # AeroSpace config for macOS
 ├── codex/
+│   ├── config.toml           # Codex UI/app defaults copied to ~/.codex/config.toml
 │   ├── AGENTS.md             # Global Codex guidance linked to ~/.codex/AGENTS.md
 │   └── scripts/              # Codex helper scripts
 ├── ghostty/
@@ -205,7 +210,3 @@ Caps Lock is mapped by Karabiner to `cmd` + `alt` + `ctrl` when held and Escape 
 6. `Super` + `shift` + `space` - Toggle floating/tiling.
 7. `Super` + `,` - Use tabbed layout.
 8. `Super` + `Enter` - Open Ghostty.
-
-## TODO
-
-1. Configure the Codex UI through a symlinked `codex.toml`.
