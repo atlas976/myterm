@@ -1,6 +1,6 @@
 # myterm
 
-Personal dotfiles for a terminal-first development setup on macOS Apple Silicon and Ubuntu-style Linux.
+Personal dotfiles for a terminal-first development setup on macOS Apple Silicon and Linux.
 
 ## Stack
 
@@ -23,7 +23,7 @@ ghostty +list-themes
 
 ## What Setup Does
 
-The setup scripts install packages, create config directories, back up existing regular config files with a `.backup` suffix, and link or copy this repo's configs into place. Neovim links both `nvim/init.lua` and the modular `nvim/lua` config directory.
+The setup script installs packages, creates config directories, backs up existing regular config files with a `.backup` suffix, and links or copies this repo's configs into place. Neovim links both `nvim/init.lua` and the modular `nvim/lua` config directory.
 
 Karabiner config is copied instead of symlinked because Karabiner-Elements can replace symlinks while reloading. If you change `karabiner/karabiner.json`, rerun `./setup.sh`.
 
@@ -31,7 +31,22 @@ Setup flags:
 - `--dry-run` prints the actions without installing packages, changing files, or changing the default shell
 - `--no-install` skips package manager, font, and plugin installation steps
 - `--no-shell-change` skips the default shell change
-- `--headless` on Linux skips GUI packages, fonts, and desktop configs for command-line-only machines
+- `--profile auto|desktop|headless|raspberrypi` overrides automatic profile detection
+- `--headless` is a compatibility alias for `--profile headless`
+
+Package setup:
+- detects macOS or Linux automatically
+- detects Linux package managers with `apt-get`, `pacman`, or `dnf`
+- detects graphical Linux sessions and defaults to `linux-desktop`; otherwise it defaults to `linux-headless`
+- detects Raspberry Pi as an extra package profile instead of assuming every Pi is headless
+- reads package mappings from `packages.tsv`
+- parses the package manifest directly in Bash, so a fresh minimal machine does not need Python just to start setup
+- keeps Homebrew casks explicit, so casks are selected only for macOS
+- skips GUI packages such as Ghostty and i3 on headless profiles
+- reports unsupported package mappings instead of guessing package names across managers
+- writes install logs to `~/.cache/myterm/setup.log` and step state to `~/.cache/myterm/setup-state`
+
+The package manifest is a TSV file with aligned columns and `-` for empty fields. Use commas inside a field for multiple profiles, checks, or package names.
 
 Codex setup:
 - copies `codex/config.toml` to `~/.codex/config.toml`
@@ -71,23 +86,23 @@ chmod +x setup.sh
 ./setup.sh
 ```
 
-### Ubuntu/Linux
+### Linux
 
 ```bash
 git clone https://github.com/lukasfuchs/myterm.git && cd myterm
-chmod +x setup_linux.sh
-./setup_linux.sh
+chmod +x setup.sh
+./setup.sh
 ```
 
-The Linux script is written for Ubuntu-style systems with `apt` and PPAs. It installs Node.js 22 from NodeSource so the optional Copilot language server works on fresh machines.
+On Linux desktop profiles with `apt`, setup adds the Neovim stable PPA, the Ghostty Ubuntu PPA, and NodeSource Node.js 22 before installing packages. Headless Linux profiles use distro packages only.
 
 For headless Linux machines such as a Raspberry Pi without a GUI, use:
 
 ```bash
-./setup_linux.sh --headless
+./setup.sh --profile headless
 ```
 
-Headless mode detects `apt-get`, `pacman`, or `dnf` and installs distro CLI packages only. It does not add Ubuntu PPAs or install Ghostty, i3, or fonts. It links only CLI-relevant configs such as Zsh, Neovim, Codex, and secrets setup. On unsupported package managers, install the packages manually and rerun with `./setup_linux.sh --headless --no-install`. On older distro releases, the distro `neovim` package may be too old for this config and the distro `nodejs` package may be too old for Copilot; update them separately if needed.
+Headless mode installs CLI packages only. It does not add Ubuntu PPAs or install Ghostty, i3, or fonts. It links only CLI-relevant configs such as Zsh, Neovim, Codex, and secrets setup. On unsupported package managers, install the packages manually and rerun with `./setup.sh --profile headless --no-install`. On older distro releases, the distro `neovim` package may be too old for this config and the distro `nodejs` package may be too old for Copilot; update them separately if needed.
 
 ## Manual macOS Steps
 
@@ -130,13 +145,15 @@ You do not need to open Karabiner manually after every restart.
 │   ├── BEGINNER_TUTORIAL.md  # Neovim help references
 │   └── lua/myterm/           # Neovim config modules
 ├── scripts/
-│   └── lib_setup.sh          # Shared setup helpers
+│   └── lib_setup.sh          # Shared setup helpers and TSV package planner
+├── tests/
+│   └── run_setup_tests.sh    # Setup test harness
 ├── zsh/
 │   ├── .zshrc                # Zsh config
 │   ├── .p10k.zsh             # Powerlevel10k config
 │   └── .secrets.example      # Template for ~/.secrets
-├── setup.sh                  # macOS bootstrap
-└── setup_linux.sh            # Ubuntu/Linux bootstrap
+├── packages.tsv              # Package mappings by profile and manager
+└── setup.sh                  # Unified macOS/Linux bootstrap
 ```
 
 ## Workspace Rules

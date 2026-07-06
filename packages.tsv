@@ -1,0 +1,35 @@
+# myterm package manifest
+#
+# Format:
+#   id<TAB>profiles<TAB>checks<TAB>brew<TAB>brew_cask<TAB>apt<TAB>pacman<TAB>dnf<TAB>npm_global
+#
+# Rules:
+#   - Fields are tab-separated.
+#   - Use "-" for an empty field.
+#   - Use commas inside a field for multiple profiles, checks, or packages.
+#   - Homebrew casks stay explicit in the brew_cask column, so non-macOS
+#     installs never select them by accident.
+#   - To view aligned columns in a terminal, run:
+#       column -t -s $'\t' packages.tsv
+#
+# id                 profiles                                           checks          brew              brew_cask                       apt                 pacman          dnf                 npm_global
+git	macos,linux-desktop,linux-headless,raspberrypi	git	git	-	git	git	git	-
+zsh	macos,linux-desktop,linux-headless,raspberrypi	zsh	zsh	-	zsh	zsh	zsh	-
+neovim	macos,linux-desktop,linux-headless,raspberrypi	nvim	neovim	-	neovim	neovim	neovim	-
+ripgrep	macos,linux-desktop,linux-headless,raspberrypi	rg	ripgrep	-	ripgrep	ripgrep	ripgrep	-
+fd	macos,linux-desktop,linux-headless,raspberrypi	fd,fdfind	fd	-	fd-find	fd	fd-find	-
+nodejs	macos,linux-desktop,linux-headless,raspberrypi	-	node	-	nodejs	nodejs,npm	nodejs,npm	-
+npm	linux-headless,raspberrypi	npm	-	-	npm	npm	npm	-
+fzf	macos,linux-desktop,linux-headless,raspberrypi	fzf	fzf	-	fzf	fzf	fzf	-
+tree-sitter-cli	macos,linux-desktop,linux-headless,raspberrypi	tree-sitter	tree-sitter-cli	-	-	-	-	tree-sitter-cli
+build-tools	linux-desktop,linux-headless,raspberrypi	-	-	-	build-essential	base-devel	make,gcc,gcc-c++	-
+curl	linux-desktop,linux-headless,raspberrypi	curl	-	-	curl	curl	curl	-
+ca-certificates	linux-desktop,linux-headless,raspberrypi	-	-	-	ca-certificates	ca-certificates	ca-certificates	-
+wget	linux-desktop	wget	-	-	wget	wget	wget	-
+unzip	linux-desktop	unzip	-	-	unzip	unzip	unzip	-
+fontconfig	linux-desktop	fc-list	-	-	fontconfig	fontconfig	fontconfig	-
+ghostty	macos,linux-desktop	ghostty	-	ghostty	ghostty	-	-	-
+i3	linux-desktop	i3	-	-	i3	i3-wm	i3	-
+aerospace	macos	aerospace	-	nikitabobko/tap/aerospace	-	-	-	-
+karabiner-elements	macos	karabiner_cli	-	karabiner-elements	-	-	-	-
+meslo-nerd-font	macos	-	-	font-meslo-lg-nerd-font	-	-	-	-

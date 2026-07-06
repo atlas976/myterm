@@ -6,82 +6,67 @@ REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=scripts/lib_setup.sh
 source "$REPO_DIR/scripts/lib_setup.sh"
 
-install_macos_packages() {
+link_platform_configs() {
+    case "$SETUP_PLATFORM:$SETUP_PROFILE" in
+        macos:macos)
+            create_common_dirs
+            create_macos_dirs
+            link_common_configs
+            link_macos_configs
+            ;;
+        linux:linux-desktop)
+            create_common_dirs
+            create_linux_dirs
+            link_common_configs
+            link_linux_configs
+            ;;
+        linux:linux-headless)
+            create_cli_dirs
+            link_cli_configs
+            ;;
+        *)
+            fatal "No config linking path for $SETUP_PLATFORM/$SETUP_PROFILE"
+            ;;
+    esac
+}
+
+run_platform_post_install() {
     if [ "$NO_INSTALL" = true ]; then
-        echo "Skipping macOS package installation."
         return 0
     fi
 
-    if ! command -v brew > /dev/null 2>&1; then
-        echo "Homebrew not found. Installing Homebrew..."
-        run_shell 'curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh | /bin/bash'
-        if [ -x /opt/homebrew/bin/brew ]; then
-            eval "$(/opt/homebrew/bin/brew shellenv)"
-        fi
-    else
-        echo "Homebrew is already installed."
+    if [ "$SETUP_PLATFORM" = linux ]; then
+        install_linux_fd_compat
+        install_linux_font
     fi
-
-    echo "Installing core macOS packages..."
-    run_cmd brew install git zsh neovim ripgrep fd tree-sitter-cli node fzf
-    run_cmd brew install --cask ghostty
-    run_cmd brew install --cask nikitabobko/tap/aerospace
-    run_cmd brew install --cask karabiner-elements
-
-    echo "Installing Meslo Nerd Font..."
-    run_cmd brew install --cask font-meslo-lg-nerd-font
-
-    ensure_powerlevel10k
 }
 
-create_macos_dirs() {
-    echo "Preparing macOS directories..."
-    ensure_dir "$HOME/.config/aerospace"
-    ensure_dir "$HOME/.config/karabiner/assets/complex_modifications"
-}
-
-link_macos_configs() {
-    echo "Linking macOS configuration files..."
-    copy_file "$REPO_DIR/karabiner/karabiner.json" "$HOME/.config/karabiner/karabiner.json"
-    link_file "$REPO_DIR/aerospace/aerospace.toml" "$HOME/.config/aerospace/aerospace.toml"
-}
-
-set_macos_shell() {
-    if [ "$NO_SHELL_CHANGE" = true ]; then
-        echo "Skipping default shell change."
-        return 0
-    fi
-
-    local current_shell
-    local zsh_path
-    current_shell=$(dscl . -read "/Users/$USER" UserShell | awk '{print $2}')
-    zsh_path="$(command -v zsh || true)"
-    if [ -z "$zsh_path" ]; then
-        echo "ERROR: zsh is not available on PATH; install it or rerun without --no-install." >&2
-        exit 1
-    fi
-
-    if [ "$current_shell" != "/bin/zsh" ]; then
-        echo "Changing default shell to Zsh..."
-        run_cmd chsh -s "$zsh_path"
-    fi
+set_platform_shell() {
+    case "$SETUP_PLATFORM" in
+        macos)
+            set_macos_shell
+            ;;
+        linux)
+            set_linux_shell
+            ;;
+        *)
+            fatal "No shell setup path for $SETUP_PLATFORM"
+            ;;
+    esac
 }
 
 parse_setup_args "$@"
-if [ "$HEADLESS" = true ]; then
-    echo "ERROR: --headless is only supported by setup_linux.sh." >&2
-    exit 2
-fi
-print_setup_header "macOS"
+detect_setup_platform
+init_setup_logging
+print_setup_header "$(setup_label)"
 
-install_macos_packages
-create_common_dirs
-create_macos_dirs
-link_common_configs
-link_macos_configs
+preflight_setup
+install_manifest_packages
+run_platform_post_install
+link_platform_configs
 link_codex_config
 setup_secrets
-set_macos_shell
+set_platform_shell
 
 echo "------------------------------------------------------------------"
-echo "Setup complete. Restart your terminal."
+echo "Setup complete. Restart your terminal or log out and back in if the default shell changed."
