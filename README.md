@@ -235,3 +235,10 @@ Caps Lock is mapped by Karabiner to `cmd` + `alt` + `ctrl` when held and Escape 
 6. `Super` + `shift` + `space` - Toggle floating/tiling.
 7. `Super` + `,` - Use tabbed layout.
 8. `Super` + `Enter` - Open Ghostty.
+
+## TODO
+
+- Add proper skills for agents and refine them.
+- Add proper tests so install behavior is more reliable.
+- Add a tmux config.
+- Add a theme switch and build it more or less maintainable.
