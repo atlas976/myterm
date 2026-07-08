@@ -145,7 +145,15 @@ You do not need to open Karabiner manually after every restart.
 │   ├── BEGINNER_TUTORIAL.md  # Neovim help references
 │   └── lua/myterm/           # Neovim config modules
 ├── scripts/
-│   └── lib_setup.sh          # Shared setup helpers and TSV package planner
+│   ├── lib_setup.sh          # Shared setup module loader
+│   ├── setup_args.sh         # Setup flags and user-facing header
+│   ├── setup_codex.sh        # Codex config and skill linking
+│   ├── setup_files.sh        # Directories, backups, symlinks, and copies
+│   ├── setup_logging.sh      # Logging, command execution, and failure state
+│   ├── setup_packages.sh     # TSV package planner and installers
+│   ├── setup_platform.sh     # OS, package manager, and profile detection
+│   ├── setup_secrets.sh      # ~/.secrets setup and migration
+│   └── setup_shell.sh        # Default shell and shell plugin setup
 ├── tests/
 │   └── run_setup_tests.sh    # Setup test harness
 ├── zsh/

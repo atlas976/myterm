@@ -81,6 +81,37 @@ test_manifest_is_shell_only_tsv() {
     fi
 }
 
+test_setup_modules_are_split() {
+    local module
+    local line_count
+    local modules=(
+        setup_args.sh
+        setup_logging.sh
+        setup_platform.sh
+        setup_packages.sh
+        setup_files.sh
+        setup_codex.sh
+        setup_secrets.sh
+        setup_shell.sh
+    )
+
+    for module in "${modules[@]}"; do
+        if [ ! -f "$ROOT_DIR/scripts/$module" ]; then
+            fail "scripts/$module should exist"
+            continue
+        fi
+
+        if ! grep -Fq "scripts/$module" "$ROOT_DIR/scripts/lib_setup.sh"; then
+            fail "lib_setup.sh should source scripts/$module"
+        fi
+    done
+
+    line_count=$(wc -l < "$ROOT_DIR/scripts/lib_setup.sh")
+    if [ "$line_count" -gt 200 ]; then
+        fail "lib_setup.sh should stay a small loader, got $line_count lines"
+    fi
+}
+
 test_headless_apt_skips_gui_packages() {
     local output
     output="$(package_plan --manager apt --profiles linux-headless)"
@@ -174,6 +205,7 @@ test_unified_setup_dry_run_headless_path() {
 }
 
 run_test "manifest is shell-only TSV" test_manifest_is_shell_only_tsv
+run_test "setup modules are split" test_setup_modules_are_split
 run_test "headless apt skips GUI packages" test_headless_apt_skips_gui_packages
 run_test "macOS keeps casks explicit" test_macos_plan_keeps_casks_explicit
 run_test "Arch reports unsupported desktop packages" test_arch_reports_unsupported_desktop_packages
