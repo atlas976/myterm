@@ -21,6 +21,7 @@ exclude_slash_tmp = false
 persistence = "save-all"
 
 [tui]
+vim_mode_default = true
 notifications = true
 notification_condition = "always"
 animations = true
