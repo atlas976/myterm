@@ -134,6 +134,7 @@ node_version_supported() {
 
 ensure_linux_node() {
     local version
+    local npm_version
     local asset_info
     local asset
     local expected_sha256
@@ -141,7 +142,18 @@ ensure_linux_node() {
     local install_dir
     local download_url
     local binary
-    local install_dir="$HOME/.local/opt/node-$NODE_VERSION"
+    install_dir="$HOME/.local/opt/node-$NODE_VERSION"
+
+    if command_exists node && command_exists npm; then
+        version="$(node --version 2> /dev/null)" || version=
+        if node_version_supported "$version"; then
+            npm_version="$(npm --version 2> /dev/null)" || npm_version=
+            if [ -n "$npm_version" ]; then
+                echo "Compatible Node.js and npm are already installed: Node $version, npm $npm_version"
+                return 0
+            fi
+        fi
+    fi
 
     ensure_dir "$HOME/.local/bin"
 

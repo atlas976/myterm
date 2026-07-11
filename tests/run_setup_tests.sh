@@ -482,6 +482,70 @@ test_linux_node_release_is_pinned() {
     assert_contains "$output" "Unsupported Linux architecture 'armv7l'" "unsupported Node.js architecture message"
 }
 
+test_linux_node_uses_compatible_system_fallback() {
+    local output
+
+    output="$(
+        HOME="$TEST_TEMP_ROOT/node-compatible" \
+        REPO_DIR="$ROOT_DIR" \
+        SETUP_LOG_DIR="$TEST_TEMP_ROOT/node-compatible-log" \
+        bash -c '
+            source "$REPO_DIR/scripts/lib_setup.sh"
+            DRY_RUN=true
+            LINUX_ARCH=x86_64
+            node() { printf "%s\n" "v24.1.0"; }
+            npm() { printf "%s\n" "10.9.0"; }
+            ensure_linux_node
+        '
+    )"
+    assert_contains "$output" "Compatible Node.js and npm are already installed: Node v24.1.0, npm 10.9.0" "compatible system Node.js is reused"
+    assert_not_contains "$output" "Installing Node.js v22.23.1 locally" "compatible system Node.js skips managed fallback"
+
+    output="$(
+        HOME="$TEST_TEMP_ROOT/node-outdated" \
+        REPO_DIR="$ROOT_DIR" \
+        SETUP_LOG_DIR="$TEST_TEMP_ROOT/node-outdated-log" \
+        bash -c '
+            source "$REPO_DIR/scripts/lib_setup.sh"
+            DRY_RUN=true
+            LINUX_ARCH=x86_64
+            node() { printf "%s\n" "v20.19.0"; }
+            npm() { printf "%s\n" "10.9.0"; }
+            ensure_linux_node
+        '
+    )"
+    assert_contains "$output" "Installing Node.js v22.23.1 locally" "outdated system Node.js uses managed fallback"
+
+    output="$(
+        HOME="$TEST_TEMP_ROOT/node-without-npm" \
+        REPO_DIR="$ROOT_DIR" \
+        SETUP_LOG_DIR="$TEST_TEMP_ROOT/node-without-npm-log" \
+        MYTERM_TEST_MISSING_COMMANDS=npm \
+        bash -c '
+            source "$REPO_DIR/scripts/lib_setup.sh"
+            DRY_RUN=true
+            LINUX_ARCH=x86_64
+            node() { printf "%s\n" "v24.1.0"; }
+            ensure_linux_node
+        '
+    )"
+    assert_contains "$output" "Installing Node.js v22.23.1 locally" "system Node.js without npm uses managed fallback"
+
+    output="$(
+        HOME="$TEST_TEMP_ROOT/node-missing" \
+        REPO_DIR="$ROOT_DIR" \
+        SETUP_LOG_DIR="$TEST_TEMP_ROOT/node-missing-log" \
+        MYTERM_TEST_MISSING_COMMANDS=node,npm \
+        bash -c '
+            source "$REPO_DIR/scripts/lib_setup.sh"
+            DRY_RUN=true
+            LINUX_ARCH=x86_64
+            ensure_linux_node
+        '
+    )"
+    assert_contains "$output" "Installing Node.js v22.23.1 locally" "missing system Node.js uses managed fallback"
+}
+
 test_powerlevel10k_install_is_pinned() {
     local output
     local function_body
@@ -679,6 +743,7 @@ run_test "Raspberry Pi end-to-end config install" test_e2e_raspberrypi_installs_
 run_test "Ubuntu server end-to-end install orchestration" test_e2e_ubuntu_server_install_orchestration
 run_test "Linux Neovim release is pinned" test_linux_neovim_release_is_pinned
 run_test "Linux Node.js release is pinned" test_linux_node_release_is_pinned
+run_test "Linux Node.js uses compatible system fallback" test_linux_node_uses_compatible_system_fallback
 run_test "Powerlevel10k install is pinned" test_powerlevel10k_install_is_pinned
 run_test "dry-run tolerates missing planned commands" test_dry_run_does_not_require_planned_commands
 run_test "early fatal initializes logging" test_early_fatal_initializes_logging

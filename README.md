@@ -44,7 +44,8 @@ Package setup:
 - parses the package manifest directly in Bash, so a fresh minimal machine does not need Python just to start setup
 - keeps Homebrew casks explicit, so casks are selected only for macOS
 - skips GUI packages such as Ghostty and i3 on Ubuntu Server and Raspberry Pi
-- installs checksum-verified Node.js `v22.23.1` and Neovim `v0.12.4` fallbacks when Linux has no compatible installation
+- uses an existing Node.js 22+ installation with working npm on Linux; otherwise installs checksum-verified Node.js `v22.23.1` locally
+- uses an existing Neovim 0.11+ installation on Linux; otherwise installs checksum-verified Neovim `v0.12.4` locally
 - pins fresh Powerlevel10k installations to a verified commit while leaving existing installations untouched
 - captures command diagnostics in `~/.cache/myterm/setup.log` and writes running, failure, and completion state to `~/.cache/myterm/setup-state`
 
