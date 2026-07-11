@@ -3,7 +3,6 @@
 # Setup argument parsing and user-facing setup header.
 # shellcheck disable=SC2034
 DRY_RUN=false
-NO_INSTALL=false
 NO_SHELL_CHANGE=false
 PROFILE_OVERRIDE=auto
 usage() {
@@ -11,11 +10,10 @@ usage() {
     script_name=$(basename "$0")
 
     cat <<EOF
-Usage: ./$script_name [--dry-run] [--no-install] [--no-shell-change] [--profile auto|desktop|server|headless|raspberrypi]
+Usage: ./$script_name [--dry-run] [--no-shell-change] [--profile auto|desktop|server|headless|raspberrypi]
 
 Options:
   --dry-run          Print actions without changing files or installing packages.
-  --no-install       Skip package manager, font, and plugin installation steps.
   --no-shell-change  Do not change the user's default shell.
   --profile          Override automatic profile detection.
   --headless         Compatibility alias for --profile server on Ubuntu.
@@ -28,9 +26,6 @@ parse_setup_args() {
         case "$1" in
             --dry-run)
                 DRY_RUN=true
-                ;;
-            --no-install)
-                NO_INSTALL=true
                 ;;
             --no-shell-change)
                 NO_SHELL_CHANGE=true
@@ -82,9 +77,6 @@ print_setup_header() {
     fi
     if [ "$DRY_RUN" = true ]; then
         echo "DRY RUN: no files, packages, or shell settings will be changed."
-    fi
-    if [ "$NO_INSTALL" = true ]; then
-        echo "NO INSTALL: package manager, font, and plugin installation steps will be skipped."
     fi
     if [ "$NO_SHELL_CHANGE" = true ]; then
         echo "NO SHELL CHANGE: default shell changes will be skipped."

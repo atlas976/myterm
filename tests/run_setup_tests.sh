@@ -163,6 +163,23 @@ test_setup_modules_are_split() {
     fi
 }
 
+test_no_install_option_is_removed() {
+    local output
+    local status
+    local stale_references
+
+    set +e
+    output="$(REPO_DIR="$ROOT_DIR" bash -c 'source "$REPO_DIR/scripts/lib_setup.sh"; parse_setup_args --no-install' 2>&1)"
+    status=$?
+    set +e
+
+    assert_eq "2" "$status" "removed --no-install exit status"
+    assert_contains "$output" "Unknown option: --no-install" "removed --no-install error"
+
+    stale_references="$(grep -R -n -E -- 'NO_INSTALL|--no-install' "$ROOT_DIR/README.md" "$ROOT_DIR/setup.sh" "$ROOT_DIR/scripts" || true)"
+    assert_eq "" "$stale_references" "production and documentation remove no-install references"
+}
+
 test_ubuntu_server_plan_skips_gui_packages() {
     local output
     output="$(package_plan --manager apt --profiles ubuntu-server)"
@@ -241,7 +258,7 @@ test_rejects_unsupported_linux_distribution() {
         MYTERM_TEST_OS_ID=fedora \
         MYTERM_TEST_GRAPHICAL=0 \
         MYTERM_TEST_RASPBERRY_PI=0 \
-        bash "$ROOT_DIR/setup.sh" --no-install --no-shell-change 2>&1
+        bash "$ROOT_DIR/setup.sh" --no-shell-change 2>&1
     )"
     status=$?
     set +e
@@ -268,7 +285,7 @@ test_rejects_graphical_raspberry_pi() {
         MYTERM_TEST_ARCH=aarch64 \
         MYTERM_TEST_GRAPHICAL=1 \
         MYTERM_TEST_RASPBERRY_PI=1 \
-        bash "$ROOT_DIR/setup.sh" --no-install --no-shell-change 2>&1
+        bash "$ROOT_DIR/setup.sh" --no-shell-change 2>&1
     )"
     status=$?
     set +e
@@ -293,7 +310,7 @@ test_rejects_32bit_raspberry_pi() {
         MYTERM_TEST_ARCH=armv7l \
         MYTERM_TEST_GRAPHICAL=0 \
         MYTERM_TEST_RASPBERRY_PI=1 \
-        bash "$ROOT_DIR/setup.sh" --no-install --no-shell-change 2>&1
+        bash "$ROOT_DIR/setup.sh" --no-shell-change 2>&1
     )"
     status=$?
     set +e
@@ -302,19 +319,51 @@ test_rejects_32bit_raspberry_pi() {
     assert_contains "$output" "Unsupported Linux architecture 'armv7l'" "32-bit Raspberry Pi error"
 }
 
+prepare_linux_e2e_fakes() {
+    local fake_bin=$1
+    local blocked_command
+
+    mkdir -p "$fake_bin"
+    printf '%s\n' '#!/usr/bin/env bash' 'exit 0' > "$fake_bin/sudo"
+    printf '%s\n' '#!/usr/bin/env bash' 'echo "NVIM v0.12.4"' > "$fake_bin/nvim"
+    printf '%s\n' '#!/usr/bin/env bash' 'echo "v24.1.0"' > "$fake_bin/node"
+    # shellcheck disable=SC2016
+    printf '%s\n' \
+        '#!/usr/bin/env bash' \
+        'if [ "${1:-}" = --version ]; then' \
+        '    echo "10.9.0"' \
+        'fi' \
+        'exit 0' \
+        > "$fake_bin/npm"
+    printf '%s\n' '#!/usr/bin/env bash' 'echo "MesloLGS NF"' > "$fake_bin/fc-list"
+
+    for blocked_command in curl wget git; do
+        printf '%s\n' \
+            '#!/usr/bin/env bash' \
+            'echo "Unexpected network command during isolated setup test" >&2' \
+            'exit 99' \
+            > "$fake_bin/$blocked_command"
+    done
+
+    chmod +x "$fake_bin"/*
+}
+
 run_linux_e2e() {
     local case_name=$1
     local os_id=$2
     local graphical=$3
     local raspberry_pi=$4
     local home="$TEST_TEMP_ROOT/$case_name/home"
+    local fake_bin="$TEST_TEMP_ROOT/$case_name/bin"
     local log_dir="$TEST_TEMP_ROOT/$case_name/log"
     local output_file="$TEST_TEMP_ROOT/$case_name/output"
     local status_file="$TEST_TEMP_ROOT/$case_name/status"
-    mkdir -p "$home"
+    mkdir -p "$home/.powerlevel10k"
+    prepare_linux_e2e_fakes "$fake_bin"
 
     set +e
     HOME="$home" \
+    PATH="$fake_bin:$PATH" \
     SETUP_LOG_DIR="$log_dir" \
     MYTERM_TEST_UNAME=Linux \
     MYTERM_TEST_PACKAGE_MANAGER=apt \
@@ -322,7 +371,7 @@ run_linux_e2e() {
     MYTERM_TEST_ARCH="$([ "$raspberry_pi" = 1 ] && printf aarch64 || printf x86_64)" \
     MYTERM_TEST_GRAPHICAL="$graphical" \
     MYTERM_TEST_RASPBERRY_PI="$raspberry_pi" \
-    bash "$ROOT_DIR/setup.sh" --no-install --no-shell-change > "$output_file" 2>&1
+    bash "$ROOT_DIR/setup.sh" --no-shell-change > "$output_file" 2>&1
     printf '%s' "$?" > "$status_file"
     set +e
 }
@@ -560,6 +609,14 @@ test_powerlevel10k_install_is_pinned() {
     assert_contains "$function_body" 'mv "$checkout_dir" "$HOME/.powerlevel10k"' "Powerlevel10k atomic install"
 }
 
+test_zsh_does_not_bootstrap_powerlevel10k() {
+    local zshrc_content
+    zshrc_content="$(cat "$ROOT_DIR/zsh/.zshrc")"
+
+    assert_not_contains "$zshrc_content" "git clone" "Zsh startup does not install Powerlevel10k"
+    assert_contains "$zshrc_content" 'source ~/.powerlevel10k/powerlevel10k.zsh-theme' "Zsh loads setup-installed Powerlevel10k"
+}
+
 test_dry_run_does_not_require_planned_commands() {
     local output
     local status
@@ -597,7 +654,7 @@ test_early_fatal_initializes_logging() {
         HOME="$home" \
         SETUP_LOG_DIR="$log_dir" \
         MYTERM_TEST_UNAME=Darwin \
-        bash "$ROOT_DIR/setup.sh" --profile headless --no-install --no-shell-change 2>&1
+        bash "$ROOT_DIR/setup.sh" --profile headless --no-shell-change 2>&1
     )"
     status=$?
     set +e
@@ -729,6 +786,7 @@ test_neovim_lsp_configuration_executes() {
 
 run_test "manifest is reduced shell-only TSV" test_manifest_is_reduced_shell_only_tsv
 run_test "setup modules are split" test_setup_modules_are_split
+run_test "no-install option is removed" test_no_install_option_is_removed
 run_test "Ubuntu server skips GUI packages" test_ubuntu_server_plan_skips_gui_packages
 run_test "Ubuntu desktop package plan is complete" test_ubuntu_desktop_plan_is_complete
 run_test "Raspberry Pi skips GUI packages" test_raspberrypi_plan_skips_gui_packages
@@ -745,6 +803,7 @@ run_test "Linux Neovim release is pinned" test_linux_neovim_release_is_pinned
 run_test "Linux Node.js release is pinned" test_linux_node_release_is_pinned
 run_test "Linux Node.js uses compatible system fallback" test_linux_node_uses_compatible_system_fallback
 run_test "Powerlevel10k install is pinned" test_powerlevel10k_install_is_pinned
+run_test "Zsh does not bootstrap Powerlevel10k" test_zsh_does_not_bootstrap_powerlevel10k
 run_test "dry-run tolerates missing planned commands" test_dry_run_does_not_require_planned_commands
 run_test "early fatal initializes logging" test_early_fatal_initializes_logging
 run_test "run_step captures command output" test_run_step_captures_command_output

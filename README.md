@@ -29,7 +29,6 @@ Karabiner config is copied instead of symlinked because Karabiner-Elements can r
 
 Setup flags:
 - `--dry-run` prints the actions without installing packages, changing files, or changing the default shell
-- `--no-install` skips package manager, font, and plugin installation steps
 - `--no-shell-change` skips the default shell change
 - `--profile auto|desktop|server|headless|raspberrypi` overrides automatic profile detection
 - `--headless` is a compatibility alias for `--profile server` on Ubuntu
@@ -46,7 +45,7 @@ Package setup:
 - skips GUI packages such as Ghostty and i3 on Ubuntu Server and Raspberry Pi
 - uses an existing Node.js 22+ installation with working npm on Linux; otherwise installs checksum-verified Node.js `v22.23.1` locally
 - uses an existing Neovim 0.11+ installation on Linux; otherwise installs checksum-verified Neovim `v0.12.4` locally
-- pins fresh Powerlevel10k installations to a verified commit while leaving existing installations untouched
+- installs fresh Powerlevel10k only through setup at a verified commit while leaving existing installations untouched; Zsh startup only loads it when present
 - captures command diagnostics in `~/.cache/myterm/setup.log` and writes running, failure, and completion state to `~/.cache/myterm/setup-state`
 
 The package manifest has seven TSV fields: ID, profiles, command checks, Homebrew formula, Homebrew cask, apt package, and npm global package. Use `-` for an empty field and commas for multiple values.

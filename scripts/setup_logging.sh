@@ -119,7 +119,7 @@ run_step() {
     echo "Exit code: $status" >&2
     echo "Log: $SETUP_LOG_FILE" >&2
     echo "State: $SETUP_STATE_FILE" >&2
-    echo "Next: fix the command above, then rerun ./setup.sh. Use ./setup.sh --no-install to skip package installation." >&2
+    echo "Next: fix the command above, then rerun ./setup.sh." >&2
     exit "$status"
 }
 

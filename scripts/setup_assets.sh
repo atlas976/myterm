@@ -229,10 +229,6 @@ install_linux_font() {
 }
 
 run_platform_post_install() {
-    if [ "$NO_INSTALL" = true ]; then
-        return 0
-    fi
-
     if [ "$SETUP_PLATFORM" = linux ]; then
         ensure_linux_neovim
         install_linux_fd_compat

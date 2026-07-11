@@ -14,7 +14,7 @@ set_macos_shell() {
     current_shell=$(dscl . -read "/Users/$USER" UserShell | awk '{print $2}')
     zsh_path="$(command -v zsh || true)"
     if [ -z "$zsh_path" ]; then
-        fatal "zsh is not available on PATH; install it or rerun without --no-install."
+        fatal "zsh is not available on PATH after package installation; fix the installation, then rerun ./setup.sh."
     fi
 
     if [ "$current_shell" != "$zsh_path" ]; then
@@ -37,7 +37,7 @@ set_linux_shell() {
     local zsh_path
     zsh_path="$(command -v zsh || true)"
     if [ -z "$zsh_path" ]; then
-        fatal "zsh is not available on PATH; install it or rerun without --no-install."
+        fatal "zsh is not available on PATH after package installation; fix the installation, then rerun ./setup.sh."
     fi
 
     if [ "${SHELL:-}" != "$zsh_path" ]; then

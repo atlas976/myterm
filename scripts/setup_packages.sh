@@ -25,12 +25,8 @@ preflight_setup() {
     validate_setup_sources
     validate_manifest "$REPO_DIR/packages.tsv"
 
-    if [ "$NO_INSTALL" = true ]; then
-        return 0
-    fi
-
     if [ "$SETUP_PLATFORM" = linux ] && ! command_exists sudo; then
-        fatal "sudo is required for Linux package installation. Rerun with --no-install after installing packages manually."
+        fatal "sudo is required for Linux package installation. Install sudo, then rerun ./setup.sh."
     fi
 }
 
@@ -365,11 +361,6 @@ install_package_groups() {
 }
 
 install_manifest_packages() {
-    if [ "$NO_INSTALL" = true ]; then
-        echo "Skipping package installation."
-        return 0
-    fi
-
     prepare_package_manager
     collect_package_plan
     print_package_summary

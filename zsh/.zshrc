@@ -20,11 +20,7 @@ compinit
 # Disable Powerlevel10k configuration wizard to ensure it never fires automatically.
 export POWERLEVEL9K_DISABLE_CONFIGURATION_WIZARD=true
 
-# Ensure Powerlevel10k is available, then load it.
-if [[ ! -d ~/.powerlevel10k ]] && command -v git &> /dev/null; then
-  git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ~/.powerlevel10k
-fi
-
+# Load Powerlevel10k when it was installed by setup.
 if [[ -r ~/.powerlevel10k/powerlevel10k.zsh-theme ]]; then
   source ~/.powerlevel10k/powerlevel10k.zsh-theme
 fi
