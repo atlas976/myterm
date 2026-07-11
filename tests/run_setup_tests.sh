@@ -423,6 +423,35 @@ test_e2e_raspberrypi_installs_cli_configs_only() {
     assert_path_absent "$home/.config/ghostty/config" "Raspberry Pi Ghostty config"
 }
 
+test_e2e_existing_p10k_config_is_backed_up() {
+    local case_name=existing-p10k-config
+    local home="$TEST_TEMP_ROOT/$case_name/home"
+    local previous_config="$home/custom-p10k.zsh"
+    mkdir -p "$home"
+    printf '%s\n' 'previous p10k config' > "$previous_config"
+    ln -s "$previous_config" "$home/.p10k.zsh"
+
+    run_linux_e2e "$case_name" ubuntu 0 0
+
+    assert_e2e_common "$case_name" ubuntu-server
+    assert_symlink_target "$home/.p10k.zsh" "$ROOT_DIR/zsh/.p10k.zsh" "active p10k config"
+    assert_symlink_target "$home/.p10k.zsh.backup" "$previous_config" "backed-up p10k config"
+}
+
+test_e2e_existing_p10k_file_is_backed_up() {
+    local case_name=existing-p10k-file
+    local home="$TEST_TEMP_ROOT/$case_name/home"
+    mkdir -p "$home"
+    printf '%s\n' 'previous p10k config' > "$home/.p10k.zsh"
+
+    run_linux_e2e "$case_name" ubuntu 0 0
+
+    assert_e2e_common "$case_name" ubuntu-server
+    assert_symlink_target "$home/.p10k.zsh" "$ROOT_DIR/zsh/.p10k.zsh" "active p10k file config"
+    assert_file_exists "$home/.p10k.zsh.backup" "backed-up p10k file config"
+    assert_eq "previous p10k config" "$(cat "$home/.p10k.zsh.backup")" "backed-up p10k file contents"
+}
+
 test_e2e_ubuntu_server_install_orchestration() {
     local case_dir="$TEST_TEMP_ROOT/ubuntu-server-install"
     local home="$case_dir/home"
@@ -617,6 +646,23 @@ test_zsh_does_not_bootstrap_powerlevel10k() {
     assert_contains "$zshrc_content" 'source ~/.powerlevel10k/powerlevel10k.zsh-theme' "Zsh loads setup-installed Powerlevel10k"
 }
 
+test_macos_registers_nonstandard_zsh_before_chsh() {
+    local output
+
+    output="$(
+        REPO_DIR="$ROOT_DIR" bash -c '
+            source "$REPO_DIR/scripts/lib_setup.sh"
+            grep() { return 1; }
+            run_step() { printf "%s\n" "$*"; }
+            ensure_macos_shell_allowed /opt/homebrew/bin/zsh
+        '
+    )"
+
+    assert_contains "$output" "Registering /opt/homebrew/bin/zsh as an allowed login shell" "non-standard macOS shell registration message"
+    assert_contains "$output" "Register Zsh in /etc/shells sudo sh -c" "non-standard macOS shell registration command"
+    assert_contains "$output" "/opt/homebrew/bin/zsh" "registered macOS shell path"
+}
+
 test_dry_run_does_not_require_planned_commands() {
     local output
     local status
@@ -798,12 +844,15 @@ run_test "rejects 32-bit Raspberry Pi" test_rejects_32bit_raspberry_pi
 run_test "Ubuntu desktop end-to-end config install" test_e2e_ubuntu_desktop_installs_configs
 run_test "Ubuntu server end-to-end config install" test_e2e_ubuntu_server_installs_cli_configs_only
 run_test "Raspberry Pi end-to-end config install" test_e2e_raspberrypi_installs_cli_configs_only
+run_test "existing p10k config is backed up" test_e2e_existing_p10k_config_is_backed_up
+run_test "existing p10k file is backed up" test_e2e_existing_p10k_file_is_backed_up
 run_test "Ubuntu server end-to-end install orchestration" test_e2e_ubuntu_server_install_orchestration
 run_test "Linux Neovim release is pinned" test_linux_neovim_release_is_pinned
 run_test "Linux Node.js release is pinned" test_linux_node_release_is_pinned
 run_test "Linux Node.js uses compatible system fallback" test_linux_node_uses_compatible_system_fallback
 run_test "Powerlevel10k install is pinned" test_powerlevel10k_install_is_pinned
 run_test "Zsh does not bootstrap Powerlevel10k" test_zsh_does_not_bootstrap_powerlevel10k
+run_test "macOS registers non-standard Zsh before chsh" test_macos_registers_nonstandard_zsh_before_chsh
 run_test "dry-run tolerates missing planned commands" test_dry_run_does_not_require_planned_commands
 run_test "early fatal initializes logging" test_early_fatal_initializes_logging
 run_test "run_step captures command output" test_run_step_captures_command_output

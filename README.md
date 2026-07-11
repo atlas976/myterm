@@ -46,6 +46,7 @@ Package setup:
 - uses an existing Node.js 22+ installation with working npm on Linux; otherwise installs checksum-verified Node.js `v22.23.1` locally
 - uses an existing Neovim 0.11+ installation on Linux; otherwise installs checksum-verified Neovim `v0.12.4` locally
 - installs fresh Powerlevel10k only through setup at a verified commit while leaving existing installations untouched; Zsh startup only loads it when present
+- backs up any existing unmanaged `~/.p10k.zsh` file or symlink before activating this repo's Powerlevel10k configuration
 - captures command diagnostics in `~/.cache/myterm/setup.log` and writes running, failure, and completion state to `~/.cache/myterm/setup-state`
 
 The package manifest has seven TSV fields: ID, profiles, command checks, Homebrew formula, Homebrew cask, apt package, and npm global package. Use `-` for an empty field and commas for multiple values.

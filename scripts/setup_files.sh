@@ -49,6 +49,35 @@ link_file() {
     echo "  -> Linked $dest"
 }
 
+link_p10k_config() {
+    local src="$REPO_DIR/zsh/.p10k.zsh"
+    local dest="$HOME/.p10k.zsh"
+    local current_target
+    local backup
+
+    if [ -L "$dest" ]; then
+        current_target="$(readlink "$dest")"
+        if [ "$current_target" = "$src" ]; then
+            echo "  -> Powerlevel10k config is already linked."
+            return 0
+        fi
+
+        backup="${dest}.backup"
+        if [ -e "$backup" ] || [ -L "$backup" ]; then
+            backup="${dest}.backup.$(date +%Y%m%d%H%M%S)"
+        fi
+
+        if [ "$DRY_RUN" = true ]; then
+            echo "  -> Would back up existing Powerlevel10k config: $dest -> $backup"
+        else
+            run_step "Back up existing Powerlevel10k config $dest" mv "$dest" "$backup"
+            echo "  -> Backed up existing Powerlevel10k config: $backup"
+        fi
+    fi
+
+    link_file "$src" "$dest"
+}
+
 link_dir() {
     local src=$1
     local dest=$2
@@ -126,7 +155,7 @@ link_common_configs() {
     link_file "$REPO_DIR/nvim/init.lua" "$HOME/.config/nvim/init.lua"
     link_dir "$REPO_DIR/nvim/lua" "$HOME/.config/nvim/lua"
     link_file "$REPO_DIR/zsh/.zshrc" "$HOME/.zshrc"
-    link_file "$REPO_DIR/zsh/.p10k.zsh" "$HOME/.p10k.zsh"
+    link_p10k_config
 }
 
 link_cli_configs() {
@@ -134,7 +163,7 @@ link_cli_configs() {
     link_file "$REPO_DIR/nvim/init.lua" "$HOME/.config/nvim/init.lua"
     link_dir "$REPO_DIR/nvim/lua" "$HOME/.config/nvim/lua"
     link_file "$REPO_DIR/zsh/.zshrc" "$HOME/.zshrc"
-    link_file "$REPO_DIR/zsh/.p10k.zsh" "$HOME/.p10k.zsh"
+    link_p10k_config
 }
 
 create_macos_dirs() {

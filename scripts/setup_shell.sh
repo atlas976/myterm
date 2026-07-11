@@ -3,6 +3,18 @@
 # Default shell setup and shell plugin bootstrap.
 POWERLEVEL10K_COMMIT=604f19a9eaa18e76db2e60b8d446d5f879065f90
 
+ensure_macos_shell_allowed() {
+    local zsh_path=$1
+
+    if grep -Fqx "$zsh_path" /etc/shells; then
+        return 0
+    fi
+
+    echo "Registering $zsh_path as an allowed login shell..."
+    # shellcheck disable=SC2016 # $1 is expanded by the privileged child shell.
+    run_step "Register Zsh in /etc/shells" sudo sh -c 'printf "%s\n" "$1" >> /etc/shells' sh "$zsh_path"
+}
+
 set_macos_shell() {
     if [ "$NO_SHELL_CHANGE" = true ]; then
         echo "Skipping default shell change."
@@ -18,6 +30,7 @@ set_macos_shell() {
     fi
 
     if [ "$current_shell" != "$zsh_path" ]; then
+        ensure_macos_shell_allowed "$zsh_path"
         echo "Changing default shell to Zsh..."
         run_step "Change default shell to Zsh" chsh -s "$zsh_path"
     fi
