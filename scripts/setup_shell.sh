@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 
 # Default shell setup and shell plugin bootstrap.
+POWERLEVEL10K_COMMIT=604f19a9eaa18e76db2e60b8d446d5f879065f90
+
 set_macos_shell() {
     if [ "$NO_SHELL_CHANGE" = true ]; then
         echo "Skipping default shell change."
@@ -24,6 +26,11 @@ set_macos_shell() {
 set_linux_shell() {
     if [ "$NO_SHELL_CHANGE" = true ]; then
         echo "Skipping default shell change."
+        return 0
+    fi
+
+    if [ "$DRY_RUN" = true ] && ! command_exists zsh; then
+        echo "  -> Would change default shell to Zsh after installation."
         return 0
     fi
 
@@ -54,11 +61,30 @@ set_platform_shell() {
 }
 
 ensure_powerlevel10k() {
+    local checkout_root
+    local checkout_dir
+    local repository=https://github.com/romkatv/powerlevel10k.git
+
     echo "Setting up Zsh plugins..."
     if [ -d "$HOME/.powerlevel10k" ]; then
         echo "  -> Powerlevel10k is already installed."
         return 0
     fi
 
-    run_cmd git clone --depth=1 https://github.com/romkatv/powerlevel10k.git "$HOME/.powerlevel10k"
+    if [ -e "$HOME/.powerlevel10k" ]; then
+        fatal "$HOME/.powerlevel10k exists but is not a directory."
+    fi
+
+    if [ "$DRY_RUN" = true ]; then
+        run_step "Clone Powerlevel10k" git clone --no-checkout "$repository" "$HOME/.powerlevel10k"
+        run_step "Check out pinned Powerlevel10k" git -C "$HOME/.powerlevel10k" checkout --detach "$POWERLEVEL10K_COMMIT"
+        return 0
+    fi
+
+    checkout_root="$(mktemp -d "$SETUP_LOG_DIR/powerlevel10k.XXXXXX")"
+    checkout_dir="$checkout_root/repository"
+    run_step "Clone Powerlevel10k" git clone --no-checkout "$repository" "$checkout_dir"
+    run_step "Check out pinned Powerlevel10k" git -C "$checkout_dir" checkout --detach "$POWERLEVEL10K_COMMIT"
+    run_step "Install pinned Powerlevel10k" mv "$checkout_dir" "$HOME/.powerlevel10k"
+    run_step "Remove Powerlevel10k temporary directory" rmdir "$checkout_root"
 }

@@ -1,6 +1,6 @@
 # myterm
 
-Personal dotfiles for a terminal-first development setup on macOS Apple Silicon and Linux.
+Personal dotfiles for a terminal-first development setup on macOS Apple Silicon, Ubuntu, and headless 64-bit Raspberry Pi OS.
 
 ## Stack
 
@@ -31,22 +31,26 @@ Setup flags:
 - `--dry-run` prints the actions without installing packages, changing files, or changing the default shell
 - `--no-install` skips package manager, font, and plugin installation steps
 - `--no-shell-change` skips the default shell change
-- `--profile auto|desktop|headless|raspberrypi` overrides automatic profile detection
-- `--headless` is a compatibility alias for `--profile headless`
+- `--profile auto|desktop|server|headless|raspberrypi` overrides automatic profile detection
+- `--headless` is a compatibility alias for `--profile server` on Ubuntu
 
 Package setup:
 - detects macOS or Linux automatically
-- detects Linux package managers with `apt-get`, `pacman`, or `dnf`
-- detects graphical Linux sessions and defaults to `linux-desktop`; otherwise it defaults to `linux-headless`
-- detects Raspberry Pi as an extra package profile instead of assuming every Pi is headless
+- supports Ubuntu desktop and Ubuntu Server on x86_64 or arm64, plus headless Raspberry Pi OS on arm64
+- rejects unsupported Linux distributions, package managers, architectures, and graphical Raspberry Pi systems before package installation
+- detects graphical Ubuntu sessions and selects `ubuntu-desktop`; otherwise it selects `ubuntu-server`
+- detects Raspberry Pi hardware and selects `raspberrypi-headless`
 - reads package mappings from `packages.tsv`
 - parses the package manifest directly in Bash, so a fresh minimal machine does not need Python just to start setup
 - keeps Homebrew casks explicit, so casks are selected only for macOS
-- skips GUI packages such as Ghostty and i3 on headless profiles
-- reports unsupported package mappings instead of guessing package names across managers
-- writes install logs to `~/.cache/myterm/setup.log` and step state to `~/.cache/myterm/setup-state`
+- skips GUI packages such as Ghostty and i3 on Ubuntu Server and Raspberry Pi
+- installs checksum-verified Node.js `v22.23.1` and Neovim `v0.12.4` fallbacks when Linux has no compatible installation
+- pins fresh Powerlevel10k installations to a verified commit while leaving existing installations untouched
+- captures command diagnostics in `~/.cache/myterm/setup.log` and writes running, failure, and completion state to `~/.cache/myterm/setup-state`
 
-The package manifest is a TSV file with aligned columns and `-` for empty fields. Use commas inside a field for multiple profiles, checks, or package names.
+The package manifest has seven TSV fields: ID, profiles, command checks, Homebrew formula, Homebrew cask, apt package, and npm global package. Use `-` for an empty field and commas for multiple values.
+
+Setup validates its platform, manifest, architecture, and required source files before installing packages. Package-manager changes are not rolled back automatically; failures include the command, exit code, log, state file, and rerun guidance.
 
 Codex setup:
 - copies `codex/config.toml` to `~/.codex/config.toml`
@@ -72,7 +76,7 @@ Secrets:
 - existing `~/.secrets` files or unrelated symlinks are left untouched
 - old `~/.secrets` symlinks to this repo's ignored `zsh/.secrets` are migrated into a real home file
 
-The safe commit helper blocks ignored files, common credential assignments, private key blocks, AWS access key IDs, and common GitHub token prefixes in staged content. It is a guardrail, not a complete secrets scanner.
+The safe commit helper blocks ignored files, common credential assignments, private key blocks, AWS access key IDs, and common GitHub token prefixes in staged content. Detected content is redacted; only file and line locations are printed. It is a guardrail, not a complete secrets scanner.
 
 ## Install
 
@@ -81,28 +85,54 @@ Clone the repo anywhere. The scripts resolve paths relative to their own locatio
 ### macOS Apple Silicon
 
 ```bash
-git clone https://github.com/lukasfuchs/myterm.git && cd myterm
+git clone https://github.com/atlas976/myterm.git && cd myterm
 chmod +x setup.sh
 ./setup.sh
 ```
 
-### Linux
+### Ubuntu Desktop
 
 ```bash
-git clone https://github.com/lukasfuchs/myterm.git && cd myterm
+git clone https://github.com/atlas976/myterm.git && cd myterm
 chmod +x setup.sh
 ./setup.sh
 ```
 
-On Linux desktop profiles with `apt`, setup adds the Neovim stable PPA, the Ghostty Ubuntu PPA, and NodeSource Node.js 22 before installing packages. Headless Linux profiles use distro packages only.
+Ubuntu desktop setup adds the Ghostty Ubuntu PPA before installing packages. It installs i3, dmenu, i3status, checksum-verified Node.js `v22.23.1`, the Nerd Fonts `v3.4.0` Meslo archive, and desktop configuration.
 
-For headless Linux machines such as a Raspberry Pi without a GUI, use:
+### Ubuntu Server
 
 ```bash
-./setup.sh --profile headless
+git clone https://github.com/atlas976/myterm.git && cd myterm
+./setup.sh --profile server
 ```
 
-Headless mode installs CLI packages only. It does not add Ubuntu PPAs or install Ghostty, i3, or fonts. It links only CLI-relevant configs such as Zsh, Neovim, Codex, and secrets setup. On unsupported package managers, install the packages manually and rerun with `./setup.sh --profile headless --no-install`. On older distro releases, the distro `neovim` package may be too old for this config and the distro `nodejs` package may be too old for Copilot; update them separately if needed.
+Ubuntu Server installs CLI packages plus checksum-verified Node.js and Neovim releases, then links Zsh, Neovim, Codex, skills, and secrets configuration. It does not add desktop repositories or install Ghostty, i3, fonts, or desktop configs. `--profile headless` and `--headless` select the same Ubuntu Server path.
+
+### Raspberry Pi OS
+
+Use a headless 64-bit Raspberry Pi OS installation:
+
+```bash
+git clone https://github.com/atlas976/myterm.git && cd myterm
+./setup.sh --profile raspberrypi
+```
+
+Raspberry Pi setup supports arm64 without a graphical session. It uses apt packages plus the checksum-verified Neovim arm64 release and links CLI configuration only. Graphical and 32-bit Raspberry Pi installations are rejected explicitly.
+
+Other Linux distributions and package managers are not supported. Setup exits before installation instead of guessing package mappings.
+
+## Verification
+
+The test suite runs real config installation into isolated temporary homes and validates symlinks, copied files, permissions, profile state, failure logs, and completion state for Ubuntu desktop, Ubuntu Server, and Raspberry Pi. Package installation orchestration is exercised with fake commands, so tests do not modify the host or use the network.
+
+```bash
+bash -n setup.sh scripts/*.sh tests/*.sh codex/scripts/*.sh
+shellcheck setup.sh scripts/*.sh tests/*.sh codex/scripts/*.sh
+bash tests/run_setup_tests.sh
+```
+
+The Neovim regression test executes the LSP configuration with stubbed plugin adapters and verifies that every custom server config is registered and enabled through the current Neovim API.
 
 ## Manual macOS Steps
 
@@ -147,6 +177,7 @@ You do not need to open Karabiner manually after every restart.
 ├── scripts/
 │   ├── lib_setup.sh          # Shared setup module loader
 │   ├── setup_args.sh         # Setup flags and user-facing header
+│   ├── setup_assets.sh       # Pinned Linux runtimes, compatibility links, and fonts
 │   ├── setup_codex.sh        # Codex config and skill linking
 │   ├── setup_files.sh        # Directories, backups, symlinks, and copies
 │   ├── setup_logging.sh      # Logging, command execution, and failure state
@@ -160,7 +191,7 @@ You do not need to open Karabiner manually after every restart.
 │   ├── .zshrc                # Zsh config
 │   ├── .p10k.zsh             # Powerlevel10k config
 │   └── .secrets.example      # Template for ~/.secrets
-├── packages.tsv              # Package mappings by profile and manager
+├── packages.tsv              # Homebrew and apt package mappings by profile
 └── setup.sh                  # Unified macOS/Linux bootstrap
 ```
 
@@ -239,6 +270,6 @@ Caps Lock is mapped by Karabiner to `cmd` + `alt` + `ctrl` when held and Escape 
 ## TODO
 
 - Add proper skills for agents and refine them.
-- Add proper tests so install behavior is more reliable.
+- Add disposable Ubuntu and Raspberry Pi VM install checks for release validation.
 - Add a tmux config.
 - Add a theme switch and build it more or less maintainable.

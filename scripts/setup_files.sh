@@ -149,6 +149,58 @@ link_macos_configs() {
     link_file "$REPO_DIR/aerospace/aerospace.toml" "$HOME/.config/aerospace/aerospace.toml"
 }
 
+create_linux_dirs() {
+    echo "Preparing Ubuntu desktop directories..."
+    ensure_dir "$HOME/.config/i3"
+}
+
+link_linux_configs() {
+    echo "Linking Ubuntu desktop configuration files..."
+    link_file "$REPO_DIR/i3/config" "$HOME/.config/i3/config"
+}
+
+validate_setup_sources() {
+    local source_path
+    local required_sources=(
+        "$REPO_DIR/packages.tsv"
+        "$REPO_DIR/codex/config.toml"
+        "$REPO_DIR/codex/AGENTS.md"
+        "$REPO_DIR/codex/scripts/safe_commit.sh"
+        "$REPO_DIR/nvim/init.lua"
+        "$REPO_DIR/nvim/lua"
+        "$REPO_DIR/zsh/.zshrc"
+        "$REPO_DIR/zsh/.p10k.zsh"
+        "$REPO_DIR/zsh/.secrets.example"
+    )
+
+    case "$SETUP_PROFILE" in
+        macos)
+            required_sources+=(
+                "$REPO_DIR/ghostty/config"
+                "$REPO_DIR/aerospace/aerospace.toml"
+                "$REPO_DIR/karabiner/karabiner.json"
+            )
+            ;;
+        ubuntu-desktop)
+            required_sources+=(
+                "$REPO_DIR/ghostty/config"
+                "$REPO_DIR/i3/config"
+            )
+            ;;
+        ubuntu-server|raspberrypi-headless)
+            ;;
+        *)
+            fatal "No source-validation path for $SETUP_PROFILE"
+            ;;
+    esac
+
+    for source_path in "${required_sources[@]}"; do
+        if [ ! -e "$source_path" ]; then
+            fatal "Required setup source is missing: $source_path"
+        fi
+    done
+}
+
 link_platform_configs() {
     case "$SETUP_PLATFORM:$SETUP_PROFILE" in
         macos:macos)
@@ -157,13 +209,13 @@ link_platform_configs() {
             link_common_configs
             link_macos_configs
             ;;
-        linux:linux-desktop)
+        linux:ubuntu-desktop)
             create_common_dirs
             create_linux_dirs
             link_common_configs
             link_linux_configs
             ;;
-        linux:linux-headless)
+        linux:ubuntu-server|linux:raspberrypi-headless)
             create_cli_dirs
             link_cli_configs
             ;;

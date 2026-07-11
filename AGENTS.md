@@ -14,7 +14,8 @@ This repository is a personal dotfiles and bootstrap environment for terminal-fi
 ## Verification
 
 - For shell script changes, run `bash -n` and `shellcheck` when available.
+- For setup behavior changes, run `bash tests/run_setup_tests.sh`.
 - For Karabiner JSON changes, run `jq empty`.
-- For Neovim Lua changes, run `luac -p nvim/init.lua` when available.
+- For Neovim Lua changes, parse all files with `luac -p` and run the Neovim LSP regression test through `tests/run_setup_tests.sh`.
 - For AeroSpace TOML changes, parse `aerospace/aerospace.toml` with a TOML parser when available.
 - Before committing, run `codex/scripts/safe_commit.sh`.

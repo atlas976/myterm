@@ -1,12 +1,15 @@
 #!/usr/bin/env bash
 
-# Platform, package manager, and profile detection.
+# Platform, distribution, package manager, and profile detection.
 # shellcheck disable=SC2034
 SETUP_PLATFORM=
 PACKAGE_MANAGER=
 SETUP_PROFILE=
 ACTIVE_PACKAGE_PROFILES=
+LINUX_OS_ID=
+LINUX_ARCH=
 IS_RASPBERRY_PI=false
+
 is_graphical_session() {
     if [ "${MYTERM_TEST_GRAPHICAL:-}" = "1" ]; then
         return 0
@@ -33,47 +36,109 @@ detect_raspberry_pi() {
     return 1
 }
 
-detect_linux_package_manager() {
-    if [ -n "${MYTERM_TEST_PACKAGE_MANAGER:-}" ]; then
-        PACKAGE_MANAGER=$MYTERM_TEST_PACKAGE_MANAGER
+read_linux_os_id() {
+    local key
+    local value
+
+    if [ -n "${MYTERM_TEST_OS_ID:-}" ]; then
+        printf '%s\n' "$MYTERM_TEST_OS_ID"
         return 0
     fi
 
-    if command_exists apt-get; then
-        PACKAGE_MANAGER=apt
-    elif command_exists pacman; then
-        PACKAGE_MANAGER=pacman
-    elif command_exists dnf; then
-        PACKAGE_MANAGER=dnf
-    else
-        fatal "Unsupported Linux package manager. Supported managers: apt, pacman, dnf."
+    if [ ! -r /etc/os-release ]; then
+        fatal "Cannot identify Linux distribution because /etc/os-release is unavailable."
     fi
+
+    while IFS='=' read -r key value; do
+        if [ "$key" = ID ]; then
+            value=${value#\"}
+            value=${value%\"}
+            value=${value#\'}
+            value=${value%\'}
+            printf '%s\n' "$value"
+            return 0
+        fi
+    done < /etc/os-release
+
+    fatal "Cannot identify Linux distribution because /etc/os-release has no ID field."
+}
+
+detect_linux_package_manager() {
+    if [ -n "${MYTERM_TEST_PACKAGE_MANAGER:-}" ]; then
+        if [ "$MYTERM_TEST_PACKAGE_MANAGER" != apt ]; then
+            fatal "Unsupported Linux package manager '$MYTERM_TEST_PACKAGE_MANAGER'. Only apt is supported."
+        fi
+        PACKAGE_MANAGER=apt
+        return 0
+    fi
+
+    if ! command_exists apt-get; then
+        fatal "apt is required. Supported Linux targets are Ubuntu and headless Raspberry Pi OS."
+    fi
+
+    PACKAGE_MANAGER=apt
+}
+
+detect_linux_architecture() {
+    local architecture
+    architecture="${MYTERM_TEST_ARCH:-$(uname -m)}"
+
+    case "$architecture" in
+        x86_64|amd64)
+            LINUX_ARCH=x86_64
+            ;;
+        arm64|aarch64)
+            LINUX_ARCH=arm64
+            ;;
+        *)
+            fatal "Unsupported Linux architecture '$architecture'. Supported architectures are x86_64 and arm64."
+            ;;
+    esac
 }
 
 normalize_linux_profile() {
+    if [ "$IS_RASPBERRY_PI" = true ]; then
+        if is_graphical_session; then
+            fatal "Raspberry Pi setup supports headless systems only."
+        fi
+
+        case "$PROFILE_OVERRIDE" in
+            auto|headless|raspberrypi)
+                SETUP_PROFILE=raspberrypi-headless
+                ;;
+            *)
+                fatal "--profile $PROFILE_OVERRIDE is not valid on Raspberry Pi. Use auto, headless, or raspberrypi." 2
+                ;;
+        esac
+        return 0
+    fi
+
+    if [ "$LINUX_OS_ID" != ubuntu ]; then
+        fatal "Unsupported Linux distribution '$LINUX_OS_ID'. Supported targets are Ubuntu and headless Raspberry Pi OS."
+    fi
+
     case "$PROFILE_OVERRIDE" in
         auto)
             if is_graphical_session; then
-                SETUP_PROFILE=linux-desktop
+                SETUP_PROFILE=ubuntu-desktop
             else
-                SETUP_PROFILE=linux-headless
+                SETUP_PROFILE=ubuntu-server
             fi
             ;;
-        desktop|linux-desktop)
-            SETUP_PROFILE=linux-desktop
+        desktop|ubuntu-desktop)
+            SETUP_PROFILE=ubuntu-desktop
             ;;
-        headless|linux-headless)
-            SETUP_PROFILE=linux-headless
+        server|headless|ubuntu-server)
+            SETUP_PROFILE=ubuntu-server
             ;;
         raspberrypi)
-            SETUP_PROFILE=linux-headless
-            IS_RASPBERRY_PI=true
+            fatal "--profile raspberrypi requires Raspberry Pi hardware." 2
             ;;
         macos)
             fatal "--profile macos cannot be used on Linux." 2
             ;;
         *)
-            fatal "Unknown profile '$PROFILE_OVERRIDE'. Use auto, desktop, headless, or raspberrypi." 2
+            fatal "Unknown profile '$PROFILE_OVERRIDE'. Use auto, desktop, server, headless, or raspberrypi." 2
             ;;
     esac
 }
@@ -98,16 +163,14 @@ detect_setup_platform() {
             ;;
         Linux)
             SETUP_PLATFORM=linux
+            LINUX_OS_ID="$(read_linux_os_id)"
             detect_linux_package_manager
+            detect_linux_architecture
             if detect_raspberry_pi; then
                 IS_RASPBERRY_PI=true
             fi
             normalize_linux_profile
             ACTIVE_PACKAGE_PROFILES=$SETUP_PROFILE
-            if [ "$IS_RASPBERRY_PI" = true ]; then
-                ACTIVE_PACKAGE_PROFILES="$ACTIVE_PACKAGE_PROFILES,raspberrypi"
-            fi
-
             ;;
         *)
             fatal "Unsupported operating system: $uname_value"
@@ -116,21 +179,18 @@ detect_setup_platform() {
 }
 
 setup_label() {
-    case "$SETUP_PLATFORM:$SETUP_PROFILE:$IS_RASPBERRY_PI" in
-        macos:macos:*)
+    case "$SETUP_PROFILE" in
+        macos)
             echo "macOS"
             ;;
-        linux:linux-desktop:true)
-            echo "Raspberry Pi Linux desktop"
+        ubuntu-desktop)
+            echo "Ubuntu desktop"
             ;;
-        linux:linux-desktop:false)
-            echo "Linux desktop"
+        ubuntu-server)
+            echo "Ubuntu server"
             ;;
-        linux:linux-headless:true)
-            echo "Raspberry Pi Linux headless"
-            ;;
-        linux:linux-headless:false)
-            echo "Linux headless"
+        raspberrypi-headless)
+            echo "Raspberry Pi headless"
             ;;
         *)
             echo "$SETUP_PLATFORM $SETUP_PROFILE"

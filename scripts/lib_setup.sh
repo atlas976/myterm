@@ -21,6 +21,8 @@ source "$MYTERM_SETUP_SCRIPT_DIR/setup_files.sh"
 source "$MYTERM_SETUP_SCRIPT_DIR/setup_shell.sh"
 # shellcheck source=scripts/setup_packages.sh
 source "$MYTERM_SETUP_SCRIPT_DIR/setup_packages.sh"
+# shellcheck source=scripts/setup_assets.sh
+source "$MYTERM_SETUP_SCRIPT_DIR/setup_assets.sh"
 # shellcheck source=scripts/setup_codex.sh
 source "$MYTERM_SETUP_SCRIPT_DIR/setup_codex.sh"
 # shellcheck source=scripts/setup_secrets.sh

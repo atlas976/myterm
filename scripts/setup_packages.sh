@@ -3,9 +3,15 @@
 # Package manifest planning and package installation.
 validate_manifest() {
     local manifest=$1
+    local invalid_lines
 
     if [ ! -f "$manifest" ]; then
         fatal "Package manifest not found: $manifest"
+    fi
+
+    invalid_lines="$(awk -F '\t' '!/^#/ && NF != 0 && NF != 7 { print NR }' "$manifest")"
+    if [ -n "$invalid_lines" ]; then
+        fatal "Package manifest must have 7 tab-separated fields on data lines: $invalid_lines"
     fi
 
     if render_package_plan "$manifest" "$PACKAGE_MANAGER" "$ACTIVE_PACKAGE_PROFILES" > /dev/null; then
@@ -16,11 +22,12 @@ validate_manifest() {
 }
 
 preflight_setup() {
+    validate_setup_sources
+    validate_manifest "$REPO_DIR/packages.tsv"
+
     if [ "$NO_INSTALL" = true ]; then
         return 0
     fi
-
-    validate_manifest "$REPO_DIR/packages.tsv"
 
     if [ "$SETUP_PLATFORM" = linux ] && ! command_exists sudo; then
         fatal "sudo is required for Linux package installation. Rerun with --no-install after installing packages manually."
@@ -44,15 +51,13 @@ prepare_apt_repositories() {
     echo "Updating apt package sources..."
     run_step "Update apt package sources" sudo apt-get update -y
 
-    if [ "$SETUP_PROFILE" != linux-desktop ]; then
+    if [ "$SETUP_PROFILE" != ubuntu-desktop ]; then
         return 0
     fi
 
-    echo "Adding apt repositories for Neovim, Ghostty, and Node.js..."
+    echo "Adding the Ghostty apt repository..."
     run_step "Install apt repository prerequisites" sudo apt-get install -y software-properties-common curl wget unzip fontconfig ca-certificates gnupg
-    run_step "Add Neovim apt repository" sudo add-apt-repository ppa:neovim-ppa/stable -y
     run_step "Add Ghostty apt repository" sudo add-apt-repository ppa:mkasberg/ghostty-ubuntu -y
-    run_shell 'curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -'
     run_step "Refresh apt package sources" sudo apt-get update -y
 }
 
@@ -65,8 +70,6 @@ prepare_package_manager() {
     case "$PACKAGE_MANAGER" in
         apt)
             prepare_apt_repositories
-            ;;
-        pacman|dnf)
             ;;
         *)
             fatal "Unsupported package manager: $PACKAGE_MANAGER"
@@ -81,8 +84,6 @@ PACKAGE_UNSUPPORTED_IDS=()
 BREW_PACKAGES=()
 BREW_CASK_PACKAGES=()
 APT_PACKAGES=()
-PACMAN_PACKAGES=()
-DNF_PACKAGES=()
 NPM_GLOBAL_PACKAGES=()
 
 reset_package_plan() {
@@ -93,8 +94,6 @@ reset_package_plan() {
     BREW_PACKAGES=()
     BREW_CASK_PACKAGES=()
     APT_PACKAGES=()
-    PACMAN_PACKAGES=()
-    DNF_PACKAGES=()
     NPM_GLOBAL_PACKAGES=()
 }
 
@@ -161,11 +160,9 @@ choose_package_implementation() {
     local brew=$2
     local brew_cask=$3
     local apt=$4
-    local pacman=$5
-    local dnf=$6
-    local npm_global=$7
-    local kind_var=$8
-    local packages_var=$9
+    local npm_global=$5
+    local kind_var=$6
+    local packages_var=$7
     local selected_kind=
     local selected_packages=
 
@@ -186,24 +183,6 @@ choose_package_implementation() {
             if [ "$apt" != "-" ]; then
                 selected_kind=apt
                 selected_packages=$apt
-            elif [ "$npm_global" != "-" ]; then
-                selected_kind=npm_global
-                selected_packages=$npm_global
-            fi
-            ;;
-        pacman)
-            if [ "$pacman" != "-" ]; then
-                selected_kind=pacman
-                selected_packages=$pacman
-            elif [ "$npm_global" != "-" ]; then
-                selected_kind=npm_global
-                selected_packages=$npm_global
-            fi
-            ;;
-        dnf)
-            if [ "$dnf" != "-" ]; then
-                selected_kind=dnf
-                selected_packages=$dnf
             elif [ "$npm_global" != "-" ]; then
                 selected_kind=npm_global
                 selected_packages=$npm_global
@@ -234,14 +213,12 @@ render_package_plan() {
     local brew
     local brew_cask
     local apt
-    local pacman
-    local dnf
     local npm_global
     local kind
     local packages
     local checks_text
 
-    while IFS=$'\t' read -r id profiles checks brew brew_cask apt pacman dnf npm_global; do
+    while IFS=$'\t' read -r id profiles checks brew brew_cask apt npm_global; do
         line_number=$((line_number + 1))
 
         case "$id" in
@@ -251,7 +228,7 @@ render_package_plan() {
         esac
 
         if [ -z "${npm_global+x}" ]; then
-            echo "ERROR: $manifest:$line_number must have 9 tab-separated fields." >&2
+            echo "ERROR: $manifest:$line_number must have 7 tab-separated fields." >&2
             return 2
         fi
 
@@ -265,7 +242,7 @@ render_package_plan() {
             checks_text=-
         fi
 
-        if choose_package_implementation "$manager" "$brew" "$brew_cask" "$apt" "$pacman" "$dnf" "$npm_global" kind packages; then
+        if choose_package_implementation "$manager" "$brew" "$brew_cask" "$apt" "$npm_global" kind packages; then
             emit_package_plan_record "install" "$kind" "$id" "$packages" "$checks_text"
         else
             emit_package_plan_record "unsupported" "-" "$id" "-" "-"
@@ -286,12 +263,6 @@ append_install_packages() {
             ;;
         apt)
             APT_PACKAGES+=("$@")
-            ;;
-        pacman)
-            PACMAN_PACKAGES+=("$@")
-            ;;
-        dnf)
-            DNF_PACKAGES+=("$@")
             ;;
         npm_global)
             NPM_GLOBAL_PACKAGES+=("$@")
@@ -367,7 +338,7 @@ print_package_summary() {
     fi
 }
 
-install_package_groups() {
+install_system_package_groups() {
     if [ "${#BREW_PACKAGES[@]}" -gt 0 ]; then
         run_step "Install Homebrew packages" brew install "${BREW_PACKAGES[@]}"
     fi
@@ -377,18 +348,20 @@ install_package_groups() {
     if [ "${#APT_PACKAGES[@]}" -gt 0 ]; then
         run_step "Install apt packages" sudo apt-get install -y "${APT_PACKAGES[@]}"
     fi
-    if [ "${#PACMAN_PACKAGES[@]}" -gt 0 ]; then
-        run_step "Install pacman packages" sudo pacman -Syu --needed "${PACMAN_PACKAGES[@]}"
-    fi
-    if [ "${#DNF_PACKAGES[@]}" -gt 0 ]; then
-        run_step "Install dnf packages" sudo dnf install -y "${DNF_PACKAGES[@]}"
-    fi
+}
+
+install_npm_global_packages() {
     if [ "${#NPM_GLOBAL_PACKAGES[@]}" -gt 0 ]; then
-        if ! command_exists npm; then
+        if [ "$DRY_RUN" != true ] && ! command_exists npm; then
             fatal "npm is required to install global npm packages: ${NPM_GLOBAL_PACKAGES[*]}"
         fi
-        run_step "Install global npm packages" sudo npm install -g "${NPM_GLOBAL_PACKAGES[@]}"
+        run_step "Install global npm packages" npm install -g "${NPM_GLOBAL_PACKAGES[@]}"
     fi
+}
+
+install_package_groups() {
+    install_system_package_groups
+    install_npm_global_packages
 }
 
 install_manifest_packages() {
@@ -400,62 +373,10 @@ install_manifest_packages() {
     prepare_package_manager
     collect_package_plan
     print_package_summary
-    install_package_groups
-    ensure_powerlevel10k
-}
-
-install_linux_fd_compat() {
-    echo "Checking fd compatibility..."
-    ensure_dir "$HOME/.local/bin"
-
-    if command_exists fdfind && [ ! -e "$HOME/.local/bin/fd" ]; then
-        if [ "$DRY_RUN" = true ]; then
-            echo "  -> Would create fd symlink."
-        else
-            run_step "Create fd compatibility symlink" ln -s "$(command -v fdfind)" "$HOME/.local/bin/fd"
-            echo "  -> Created fd symlink."
-        fi
-    fi
-
-    export PATH="$HOME/.local/bin:$PATH"
-}
-
-install_linux_font() {
-    if [ "$SETUP_PROFILE" != linux-desktop ]; then
-        return 0
-    fi
-
-    echo "Installing Meslo Nerd Font..."
-    local font_dir="$HOME/.local/share/fonts"
-
-    ensure_dir "$font_dir"
-    if [ "$DRY_RUN" = true ]; then
-        echo "  -> Would check whether Meslo Nerd Font is installed."
-        run_cmd wget -qO /tmp/Meslo.zip "https://github.com/ryanoasis/nerd-fonts/releases/latest/download/Meslo.zip"
-        run_cmd unzip -qo /tmp/Meslo.zip -d "$font_dir"
-        run_cmd fc-cache -fv
-        run_cmd rm /tmp/Meslo.zip
-        return 0
-    fi
-
-    if fc-list | grep -qi "Meslo"; then
-        echo "  -> Meslo Nerd Font is already installed."
-        return 0
-    fi
-
-    run_step "Download Meslo Nerd Font" wget -qO /tmp/Meslo.zip "https://github.com/ryanoasis/nerd-fonts/releases/latest/download/Meslo.zip"
-    run_step "Install Meslo Nerd Font files" unzip -qo /tmp/Meslo.zip -d "$font_dir"
-    run_step "Refresh font cache" fc-cache -fv
-    run_step "Remove Meslo Nerd Font archive" rm /tmp/Meslo.zip
-}
-
-run_platform_post_install() {
-    if [ "$NO_INSTALL" = true ]; then
-        return 0
-    fi
-
+    install_system_package_groups
     if [ "$SETUP_PLATFORM" = linux ]; then
-        install_linux_fd_compat
-        install_linux_font
+        ensure_linux_node
     fi
+    install_npm_global_packages
+    ensure_powerlevel10k
 }

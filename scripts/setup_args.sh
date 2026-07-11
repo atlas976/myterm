@@ -11,14 +11,14 @@ usage() {
     script_name=$(basename "$0")
 
     cat <<EOF
-Usage: ./$script_name [--dry-run] [--no-install] [--no-shell-change] [--profile auto|desktop|headless|raspberrypi]
+Usage: ./$script_name [--dry-run] [--no-install] [--no-shell-change] [--profile auto|desktop|server|headless|raspberrypi]
 
 Options:
   --dry-run          Print actions without changing files or installing packages.
   --no-install       Skip package manager, font, and plugin installation steps.
   --no-shell-change  Do not change the user's default shell.
   --profile          Override automatic profile detection.
-  --headless         Compatibility alias for --profile headless.
+  --headless         Compatibility alias for --profile server on Ubuntu.
   -h, --help         Show this help.
 EOF
 }
@@ -89,7 +89,7 @@ print_setup_header() {
     if [ "$NO_SHELL_CHANGE" = true ]; then
         echo "NO SHELL CHANGE: default shell changes will be skipped."
     fi
-    if [ "$SETUP_PROFILE" = linux-headless ]; then
+    if [ "$SETUP_PROFILE" = ubuntu-server ] || [ "$SETUP_PROFILE" = raspberrypi-headless ]; then
         echo "HEADLESS: GUI packages, fonts, and desktop configs will be skipped where supported."
     fi
     echo "------------------------------------------------------------------"

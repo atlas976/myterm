@@ -1,0 +1,37 @@
+name: Verify
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  ubuntu:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Install verification tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y jq lua5.4 neovim shellcheck zsh
+
+      - name: Check shell syntax
+        run: bash -n setup.sh scripts/*.sh tests/*.sh codex/scripts/*.sh
+
+      - name: Run ShellCheck
+        run: shellcheck setup.sh scripts/*.sh tests/*.sh codex/scripts/*.sh
+
+      - name: Run setup end-to-end tests
+        run: bash tests/run_setup_tests.sh
+
+      - name: Validate configs
+        run: |
+          zsh -n zsh/.zshrc zsh/.p10k.zsh
+          jq empty karabiner/karabiner.json nvim/lazy-lock.json
+          luac5.4 -p nvim/init.lua nvim/lua/myterm/*.lua nvim/lua/myterm/plugins/*.lua
+          python3 -c 'import pathlib, tomllib; tomllib.loads(pathlib.Path("aerospace/aerospace.toml").read_text())'
+          git diff --check

@@ -11,8 +11,10 @@ local function latexmk_executable()
   return 'latexmk'
 end
 
-local function texlab_root_dir(filename)
-  return vim.fs.root(filename, { '.latexmkrc', 'latexmkrc', 'Tectonic.toml', '.git' }) or vim.fs.dirname(filename)
+local function texlab_root_dir(bufnr, on_dir)
+  local filename = vim.api.nvim_buf_get_name(bufnr)
+  local root = vim.fs.root(filename, { '.latexmkrc', 'latexmkrc', 'Tectonic.toml', '.git' }) or vim.fs.dirname(filename)
+  on_dir(root)
 end
 
 return {
@@ -125,7 +127,8 @@ return {
       },
     }
 
-    local ensure_installed = vim.tbl_keys(servers or {})
+    local ensure_installed = vim.tbl_keys(servers)
+    table.sort(ensure_installed)
     vim.list_extend(ensure_installed, {
       'stylua',
     })
@@ -135,14 +138,16 @@ return {
     local capabilities = vim.lsp.protocol.make_client_capabilities()
     capabilities = vim.tbl_deep_extend('force', capabilities, require('blink.cmp').get_lsp_capabilities())
 
-    require('mason-lspconfig').setup {
-      handlers = {
-        function(server_name)
-          local server = servers[server_name] or {}
-          server.capabilities = vim.tbl_deep_extend('force', {}, capabilities, server.capabilities or {})
-          require('lspconfig')[server_name].setup(server)
-        end,
-      },
-    }
+    local server_names = vim.tbl_keys(servers)
+    table.sort(server_names)
+
+    for _, server_name in ipairs(server_names) do
+      local server = servers[server_name]
+      server.capabilities = vim.tbl_deep_extend('force', {}, capabilities, server.capabilities or {})
+      vim.lsp.config(server_name, server)
+    end
+
+    require('mason-lspconfig').setup { automatic_enable = false }
+    vim.lsp.enable(server_names)
   end,
 }

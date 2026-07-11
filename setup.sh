@@ -18,6 +18,7 @@ link_platform_configs
 link_codex_config
 setup_secrets
 set_platform_shell
+complete_setup_logging
 
 echo "------------------------------------------------------------------"
 echo "Setup complete. Restart your terminal or log out and back in if the default shell changed."
