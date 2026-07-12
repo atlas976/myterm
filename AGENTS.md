@@ -6,7 +6,6 @@ This repository is a personal dotfiles and bootstrap environment for terminal-fi
 
 ## Platform Boundaries
 
-- Keep macOS and Linux setup separate.
 - AeroSpace and Karabiner are macOS-only.
 - i3 is Linux-only.
 - Do not replace package managers, shells, terminal apps, window managers, or editor foundations without explicit user approval.
