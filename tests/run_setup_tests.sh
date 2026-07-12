@@ -536,6 +536,57 @@ test_linux_neovim_release_is_pinned() {
     assert_contains "$output" "Unsupported Linux architecture 'armv7l'" "unsupported Neovim architecture message"
 }
 
+test_linux_neovim_install_creates_local_bin() {
+    local home="$TEST_TEMP_ROOT/neovim-fresh-home"
+    local log_dir="$TEST_TEMP_ROOT/neovim-fresh-log"
+    local output
+    local status
+
+    mkdir -p "$home" "$log_dir"
+
+    set +e
+    output="$(
+        HOME="$home" \
+        REPO_DIR="$ROOT_DIR" \
+        SETUP_LOG_DIR="$log_dir" \
+        MYTERM_TEST_MISSING_COMMANDS=nvim \
+        bash -c '
+            set -e
+            source "$REPO_DIR/scripts/lib_setup.sh"
+            DRY_RUN=false
+            LINUX_ARCH=x86_64
+
+            run_step() {
+                local label=$1
+                shift
+
+                case "$label" in
+                    "Download Neovim "*)
+                        : > "$archive"
+                        ;;
+                    "Verify Neovim "*)
+                        ;;
+                    "Extract Neovim "*)
+                        mkdir -p "$install_dir/bin"
+                        printf "%s\n" "#!/usr/bin/env bash" "exit 0" > "$install_dir/bin/nvim"
+                        chmod +x "$install_dir/bin/nvim"
+                        ;;
+                    *)
+                        "$@"
+                        ;;
+                esac
+            }
+
+            ensure_linux_neovim
+        ' 2>&1
+    )"
+    status=$?
+    set +e
+
+    assert_eq "0" "$status" "fresh-home Neovim install status: $output"
+    assert_symlink_target "$home/.local/bin/nvim" "$home/.local/opt/nvim-v0.12.4/bin/nvim" "fresh-home Neovim link"
+}
+
 test_linux_node_release_is_pinned() {
     local output
     local status
@@ -812,6 +863,41 @@ test_common_private_key_names_are_ignored() {
     done
 }
 
+test_github_actions_runs_all_platform_install_tests() {
+    local workflow="$ROOT_DIR/.github/workflows/verify.yml"
+    local content
+    local macos_checks
+
+    assert_file_exists "$workflow" "GitHub Actions verification workflow"
+    if [ ! -f "$workflow" ]; then
+        return
+    fi
+
+    content="$(cat "$workflow")"
+    macos_checks="$(sed -n '/Verify macOS-specific configs/,/Verify Ubuntu desktop-specific configs/p' "$workflow")"
+    assert_contains "$content" $'  push:' "workflow runs on every push"
+    assert_contains "$content" $'  pull_request:' "workflow runs on pull requests"
+    assert_not_contains "$content" $'\n    branches:' "push verification has no branch filter"
+    assert_not_contains "$content" $'\n    paths:' "push verification has no path filter"
+    assert_not_contains "$content" "paths-ignore:" "push verification has no ignored paths"
+    assert_contains "$content" "contents: read" "workflow uses read-only repository permissions"
+    assert_contains "$content" "persist-credentials: false" "checkout credentials are not persisted"
+    assert_contains "$content" "fail-fast: false" "all platform jobs finish when one fails"
+    assert_contains "$content" "ubuntu-24.04" "workflow covers Ubuntu x86_64"
+    assert_contains "$content" "ubuntu-24.04-arm" "workflow covers Linux arm64"
+    assert_contains "$content" "macos-15" "workflow covers Apple Silicon macOS"
+    assert_contains "$content" "ubuntu-desktop" "workflow covers Ubuntu desktop"
+    assert_contains "$content" "ubuntu-server" "workflow covers Ubuntu server"
+    assert_contains "$content" "raspberrypi-headless" "workflow covers the Raspberry Pi profile"
+    assert_contains "$content" "bash tests/run_setup_tests.sh" "every platform runs the end-to-end suite"
+    assert_contains "$content" "Run real setup" "every platform runs setup for real"
+    assert_contains "$content" "Re-run setup to verify idempotency" "every platform reruns setup"
+    assert_contains "$content" "MYTERM_TEST_RASPBERRY_PI: \"1\"" "Raspberry Pi job selects the hardware-specific path"
+    assert_contains "$content" "brew list --cask ghostty" "macOS verifies the installed Ghostty cask"
+    assert_not_contains "$macos_checks" "command -v ghostty" "macOS does not require Ghostty on the runner PATH"
+    assert_not_contains "$content" "continue-on-error:" "platform failures are blocking"
+}
+
 test_neovim_lsp_configuration_executes() {
     local output
     local status
@@ -848,6 +934,7 @@ run_test "existing p10k config is backed up" test_e2e_existing_p10k_config_is_ba
 run_test "existing p10k file is backed up" test_e2e_existing_p10k_file_is_backed_up
 run_test "Ubuntu server end-to-end install orchestration" test_e2e_ubuntu_server_install_orchestration
 run_test "Linux Neovim release is pinned" test_linux_neovim_release_is_pinned
+run_test "Linux Neovim install creates local bin" test_linux_neovim_install_creates_local_bin
 run_test "Linux Node.js release is pinned" test_linux_node_release_is_pinned
 run_test "Linux Node.js uses compatible system fallback" test_linux_node_uses_compatible_system_fallback
 run_test "Powerlevel10k install is pinned" test_powerlevel10k_install_is_pinned
@@ -860,6 +947,7 @@ run_test "font check is idempotent" test_font_check_is_idempotent_with_pipefail
 run_test "Linux font release is pinned" test_linux_font_release_is_pinned
 run_test "safe commit redacts credentials" test_safe_commit_redacts_detected_credentials
 run_test "common private key names are ignored" test_common_private_key_names_are_ignored
+run_test "GitHub Actions runs all platform install tests" test_github_actions_runs_all_platform_install_tests
 run_test "Neovim LSP configuration executes" test_neovim_lsp_configuration_executes
 
 if [ "$FAILURES" -gt 0 ]; then

@@ -3,21 +3,77 @@ name: Verify
 on:
   push:
   pull_request:
+  workflow_dispatch:
 
 permissions:
   contents: read
 
 jobs:
-  ubuntu:
-    runs-on: ubuntu-latest
+  platform:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: macOS ARM64 / desktop
+            runner: macos-15
+            setup_profile: macos
+            expected_platform: macos
+            expected_profile: macos
+          - name: Ubuntu x64 / desktop
+            runner: ubuntu-24.04
+            setup_profile: desktop
+            expected_platform: linux
+            expected_profile: ubuntu-desktop
+          - name: Ubuntu x64 / server
+            runner: ubuntu-24.04
+            setup_profile: server
+            expected_platform: linux
+            expected_profile: ubuntu-server
+          - name: Ubuntu ARM64 / server
+            runner: ubuntu-24.04-arm
+            setup_profile: server
+            expected_platform: linux
+            expected_profile: ubuntu-server
+          - name: Raspberry Pi profile / ARM64
+            runner: ubuntu-24.04-arm
+            setup_profile: raspberrypi
+            expected_platform: linux
+            expected_profile: raspberrypi-headless
+
+    env:
+      CI: "true"
+      DEBIAN_FRONTEND: noninteractive
+      HOMEBREW_NO_ANALYTICS: "1"
+      HOMEBREW_NO_AUTO_UPDATE: "1"
+
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
 
-      - name: Install verification tools
+      - name: Show native runner platform
+        run: |
+          uname -a
+          if [ -r /etc/os-release ]; then
+            sed -n '1,12p' /etc/os-release
+          fi
+
+      - name: Verify passwordless sudo
+        run: sudo -n true
+
+      - name: Install Linux verification tools
+        if: runner.os == 'Linux'
         run: |
           sudo apt-get update
-          sudo apt-get install -y jq lua5.4 neovim shellcheck zsh
+          sudo apt-get install -y jq lua5.4 shellcheck
+
+      - name: Install macOS verification tools
+        if: runner.os == 'macOS'
+        run: brew install jq lua shellcheck
 
       - name: Check shell syntax
         run: bash -n setup.sh scripts/*.sh tests/*.sh codex/scripts/*.sh
@@ -25,13 +81,127 @@ jobs:
       - name: Run ShellCheck
         run: shellcheck setup.sh scripts/*.sh tests/*.sh codex/scripts/*.sh
 
-      - name: Run setup end-to-end tests
+      - name: Run real setup
+        if: matrix.expected_profile != 'raspberrypi-headless'
+        run: bash setup.sh --profile "${{ matrix.setup_profile }}" --no-shell-change
+
+      # GitHub provides native ARM64 Linux but not Raspberry Pi hardware. Only
+      # hardware and OS identity are overridden; package installation is real.
+      - name: Run real setup for Raspberry Pi profile
+        if: matrix.expected_profile == 'raspberrypi-headless'
+        env:
+          MYTERM_TEST_GRAPHICAL: "0"
+          MYTERM_TEST_OS_ID: raspbian
+          MYTERM_TEST_RASPBERRY_PI: "1"
+        run: bash setup.sh --profile raspberrypi --no-shell-change
+
+      - name: Add user-installed tools to PATH
+        run: echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+      - name: Verify installed setup state
+        run: |
+          state_file="$HOME/.cache/myterm/setup-state"
+          test -f "$state_file"
+          grep -Fxq "platform=${{ matrix.expected_platform }}" "$state_file"
+          grep -Fxq "profile=${{ matrix.expected_profile }}" "$state_file"
+          grep -Fxq "status=complete" "$state_file"
+
+          test -L "$HOME/.zshrc"
+          test -L "$HOME/.p10k.zsh"
+          test -L "$HOME/.config/nvim/init.lua"
+          test -L "$HOME/.config/nvim/lua"
+          test -f "$HOME/.codex/config.toml"
+          test ! -L "$HOME/.codex/config.toml"
+          test -L "$HOME/.codex/AGENTS.md"
+          test -f "$HOME/.secrets"
+
+          command -v git >/dev/null
+          command -v zsh >/dev/null
+          command -v nvim >/dev/null
+          command -v node >/dev/null
+          command -v npm >/dev/null
+          command -v rg >/dev/null
+          command -v fzf >/dev/null
+          command -v tree-sitter >/dev/null
+          command -v fd >/dev/null || command -v fdfind >/dev/null
+
+          if [ "$(uname -s)" = Darwin ]; then
+            secrets_mode="$(stat -f '%Lp' "$HOME/.secrets")"
+          else
+            secrets_mode="$(stat -c '%a' "$HOME/.secrets")"
+          fi
+          test "$secrets_mode" = 600
+
+      - name: Verify desktop-specific configs
+        if: matrix.expected_profile == 'macos' || matrix.expected_profile == 'ubuntu-desktop'
+        run: test -L "$HOME/.config/ghostty/config"
+
+      - name: Verify macOS-specific configs
+        if: matrix.expected_profile == 'macos'
+        run: |
+          test -L "$HOME/.config/aerospace/aerospace.toml"
+          test -f "$HOME/.config/karabiner/karabiner.json"
+          test ! -L "$HOME/.config/karabiner/karabiner.json"
+          command -v aerospace >/dev/null
+          brew list --cask ghostty >/dev/null
+          brew list --cask karabiner-elements >/dev/null
+
+      - name: Verify Ubuntu desktop-specific configs
+        if: matrix.expected_profile == 'ubuntu-desktop'
+        run: |
+          test -L "$HOME/.config/i3/config"
+          command -v ghostty >/dev/null
+          command -v i3 >/dev/null
+          command -v dmenu_run >/dev/null
+          command -v i3status >/dev/null
+
+      - name: Verify headless configs stay CLI-only
+        if: matrix.expected_profile == 'ubuntu-server' || matrix.expected_profile == 'raspberrypi-headless'
+        run: |
+          test ! -e "$HOME/.config/ghostty/config"
+          test ! -e "$HOME/.config/i3/config"
+          test ! -e "$HOME/.config/aerospace/aerospace.toml"
+          test ! -e "$HOME/.config/karabiner/karabiner.json"
+
+      - name: Run setup end-to-end and platform tests
         run: bash tests/run_setup_tests.sh
 
       - name: Validate configs
         run: |
           zsh -n zsh/.zshrc zsh/.p10k.zsh
           jq empty karabiner/karabiner.json nvim/lazy-lock.json
-          luac5.4 -p nvim/init.lua nvim/lua/myterm/*.lua nvim/lua/myterm/plugins/*.lua
+          if command -v luac5.4 >/dev/null 2>&1; then
+            luac5.4 -p nvim/init.lua nvim/lua/myterm/*.lua nvim/lua/myterm/plugins/*.lua
+          else
+            luac -p nvim/init.lua nvim/lua/myterm/*.lua nvim/lua/myterm/plugins/*.lua
+          fi
           python3 -c 'import pathlib, tomllib; tomllib.loads(pathlib.Path("aerospace/aerospace.toml").read_text())'
           git diff --check
+
+      - name: Re-run setup to verify idempotency
+        if: matrix.expected_profile != 'raspberrypi-headless'
+        run: bash setup.sh --profile "${{ matrix.setup_profile }}" --no-shell-change
+
+      - name: Re-run Raspberry Pi setup to verify idempotency
+        if: matrix.expected_profile == 'raspberrypi-headless'
+        env:
+          MYTERM_TEST_GRAPHICAL: "0"
+          MYTERM_TEST_OS_ID: raspbian
+          MYTERM_TEST_RASPBERRY_PI: "1"
+        run: bash setup.sh --profile raspberrypi --no-shell-change
+
+      - name: Verify setup did not modify the repository
+        run: |
+          grep -Fxq "status=complete" "$HOME/.cache/myterm/setup-state"
+          git diff --exit-code
+          test -z "$(git status --short)"
+
+      - name: Report setup state
+        if: always()
+        run: |
+          state_file="$HOME/.cache/myterm/setup-state"
+          if [ -f "$state_file" ]; then
+            sed -n '/^platform=/p; /^package_manager=/p; /^profile=/p; /^linux_os_id=/p; /^linux_arch=/p; /^status=/p' "$state_file"
+          else
+            echo "Setup state was not created."
+          fi

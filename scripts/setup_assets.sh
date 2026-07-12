@@ -92,6 +92,7 @@ ensure_linux_neovim() {
     install_dir="$HOME/.local/opt/nvim-$NEOVIM_VERSION"
     download_url="https://github.com/neovim/neovim/releases/download/$NEOVIM_VERSION/$asset"
 
+    ensure_dir "$HOME/.local/bin"
     ensure_dir "$HOME/.local/opt"
     ensure_dir "$install_dir"
     run_step "Download Neovim $NEOVIM_VERSION" curl -fL "$download_url" -o "$archive"

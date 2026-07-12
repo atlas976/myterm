@@ -133,6 +133,16 @@ shellcheck setup.sh scripts/*.sh tests/*.sh codex/scripts/*.sh
 bash tests/run_setup_tests.sh
 ```
 
+GitHub Actions runs on every push and pull request without path filters. Every matrix entry executes `setup.sh` for real on a disposable hosted runner, runs the complete test suite, and then executes `setup.sh` a second time to check idempotency. The required matrix covers:
+
+- macOS 15 on Apple Silicon with the macOS profile
+- Ubuntu 24.04 x86_64 with the desktop profile
+- Ubuntu 24.04 x86_64 with the server profile
+- Ubuntu 24.04 arm64 with the server profile
+- the headless Raspberry Pi profile on native arm64 Linux
+
+GitHub does not provide Raspberry Pi hardware. The Raspberry Pi matrix entry therefore overrides only Raspberry Pi and Raspberry Pi OS detection while performing the package installation and all other setup actions for real on a native arm64 Linux runner. Kernel, firmware, GPIO, and graphical Raspberry Pi behavior still require a real Raspberry Pi.
+
 The Neovim regression test executes the LSP configuration with stubbed plugin adapters and verifies that every custom server config is registered and enabled through the current Neovim API.
 
 ## Manual macOS Steps
