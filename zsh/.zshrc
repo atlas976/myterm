@@ -9,14 +9,21 @@ if [[ -x /opt/homebrew/bin/brew ]]; then
   eval "$(/opt/homebrew/bin/brew shellenv)"
 fi
 
+case ":$PATH:" in
+  *":$HOME/.local/bin:"*) ;;
+  *) export PATH="$HOME/.local/bin:$PATH" ;;
+esac
+
 autoload -Uz compinit
 compinit
 
 # Disable Powerlevel10k configuration wizard to ensure it never fires automatically.
 export POWERLEVEL9K_DISABLE_CONFIGURATION_WIZARD=true
 
-# Load Powerlevel10k Theme
-source ~/.powerlevel10k/powerlevel10k.zsh-theme
+# Load Powerlevel10k when it was installed by setup.
+if [[ -r ~/.powerlevel10k/powerlevel10k.zsh-theme ]]; then
+  source ~/.powerlevel10k/powerlevel10k.zsh-theme
+fi
 
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh

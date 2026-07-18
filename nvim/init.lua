@@ -1,4 +1,5 @@
 local config_dir = vim.fn.fnamemodify(vim.fn.resolve(vim.fn.expand '<sfile>:p'), ':h')
+vim.g.myterm_config_dir = config_dir
 
 package.path = table.concat({
   config_dir .. '/lua/?.lua',
@@ -9,6 +10,7 @@ package.path = table.concat({
 require 'myterm.options'
 require 'myterm.keymaps'
 require 'myterm.autocmds'
+require('myterm.copilot').setup()
 require 'myterm.lazy'
 
 -- vim: ts=2 sts=2 sw=2 et

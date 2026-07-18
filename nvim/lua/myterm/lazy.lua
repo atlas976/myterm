@@ -1,4 +1,5 @@
 local lazypath = vim.fn.stdpath 'data' .. '/lazy/lazy.nvim'
+local config_dir = vim.g.myterm_config_dir or vim.fn.stdpath 'config'
 
 if not (vim.uv or vim.loop).fs_stat(lazypath) then
   local lazyrepo = 'https://github.com/folke/lazy.nvim.git'
@@ -20,11 +21,13 @@ require('lazy').setup({
   require 'myterm.plugins.lsp',
   require 'myterm.plugins.formatting',
   require 'myterm.plugins.completion',
+  require 'myterm.plugins.copilot',
   require 'myterm.plugins.colorscheme',
   require 'myterm.plugins.todo-comments',
   require 'myterm.plugins.mini',
   require 'myterm.plugins.treesitter',
 }, {
+  lockfile = config_dir .. '/lazy-lock.json',
   ui = {
     icons = vim.g.have_nerd_font and {} or {
       cmd = '⌘',
@@ -43,3 +46,5 @@ require('lazy').setup({
     },
   },
 })
+
+require('myterm.copilot').sync_from_state()

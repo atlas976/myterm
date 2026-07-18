@@ -1,0 +1,72 @@
+# Codex personal defaults for the CLI, IDE extension, and Codex app.
+# Keep machine-specific auth, provider URLs, and MCP credentials out of this repo.
+
+personality = "pragmatic"
+approval_policy = "on-request"
+approvals_reviewer = "auto_review"
+sandbox_mode = "workspace-write"
+web_search = "live"
+
+hide_agent_reasoning = false
+show_raw_agent_reasoning = true
+check_for_update_on_startup = true
+
+[sandbox_workspace_write]
+writable_roots = []
+network_access = false
+exclude_tmpdir_env_var = false
+exclude_slash_tmp = false
+
+[history]
+persistence = "save-all"
+
+[tui]
+vim_mode_default = true
+notifications = true
+notification_condition = "always"
+animations = true
+show_tooltips = true
+alternate_screen = "auto"
+status_line = ["model-with-reasoning", "context-remaining", "git-branch", "current-dir"]
+terminal_title = ["spinner", "status", "thread", "project"]
+
+[analytics]
+enabled = true
+
+[feedback]
+enabled = true
+
+[features]
+apps = true
+auto_compaction = true
+browser_use = true
+browser_use_external = true
+browser_use_full_cdp_access = true
+computer_use = true
+enable_request_compression = true
+fast_mode = true
+goals = true
+guardian_approval = true
+hooks = true
+image_generation = true
+in_app_browser = true
+memories = true
+mentions_v2 = true
+multi_agent = true
+personality = true
+plugin_sharing = true
+plugins = true
+prevent_idle_sleep = true
+remote_compaction_v2 = true
+shell_snapshot = true
+shell_tool = true
+skill_mcp_dependency_install = true
+tool_call_mcp_elicitation = true
+tool_suggest = true
+unified_exec = true
+workspace_dependencies = true
+
+[memories]
+generate_memories = true
+use_memories = true
+disable_on_external_context = false

@@ -1,0 +1,36 @@
+# myterm package manifest
+#
+# Format:
+#   id<TAB>profiles<TAB>checks<TAB>brew<TAB>brew_cask<TAB>apt<TAB>npm_global
+#
+# Rules:
+#   - Fields are tab-separated.
+#   - Use "-" for an empty field.
+#   - Use commas inside a field for multiple profiles, checks, or packages.
+#   - Linux mappings target apt on Ubuntu and headless Raspberry Pi OS only.
+#   - Homebrew casks stay explicit in the brew_cask column.
+#   - To view aligned columns in a terminal, run:
+#       column -t -s $'\t' packages.tsv
+#
+# id                 profiles                                                    checks          brew              brew_cask                       apt                 npm_global
+git	macos,ubuntu-desktop,ubuntu-server,raspberrypi-headless	git	git	-	git	-
+zsh	macos,ubuntu-desktop,ubuntu-server,raspberrypi-headless	zsh	zsh	-	zsh	-
+neovim	macos	nvim	neovim	-	-	-
+ripgrep	macos,ubuntu-desktop,ubuntu-server,raspberrypi-headless	rg	ripgrep	-	ripgrep	-
+fd	macos,ubuntu-desktop,ubuntu-server,raspberrypi-headless	fd,fdfind	fd	-	fd-find	-
+nodejs	macos	-	node	-	-	-
+fzf	macos,ubuntu-desktop,ubuntu-server,raspberrypi-headless	fzf	fzf	-	fzf	-
+tree-sitter-cli	macos,ubuntu-desktop,ubuntu-server,raspberrypi-headless	tree-sitter	tree-sitter-cli	-	-	tree-sitter-cli
+build-tools	ubuntu-desktop,ubuntu-server,raspberrypi-headless	-	-	-	build-essential	-
+curl	ubuntu-desktop,ubuntu-server,raspberrypi-headless	curl	-	-	curl	-
+ca-certificates	ubuntu-desktop,ubuntu-server,raspberrypi-headless	-	-	-	ca-certificates	-
+wget	ubuntu-desktop	wget	-	-	wget	-
+unzip	ubuntu-desktop	unzip	-	-	unzip	-
+fontconfig	ubuntu-desktop	fc-list	-	-	fontconfig	-
+ghostty	macos,ubuntu-desktop	ghostty	-	ghostty	ghostty	-
+i3	ubuntu-desktop	i3	-	-	i3	-
+dmenu	ubuntu-desktop	dmenu_run	-	-	dmenu	-
+i3status	ubuntu-desktop	i3status	-	-	i3status	-
+aerospace	macos	aerospace	-	nikitabobko/tap/aerospace	-	-
+karabiner-elements	macos	karabiner_cli	-	karabiner-elements	-	-
+meslo-nerd-font	macos	-	-	font-meslo-lg-nerd-font	-	-
