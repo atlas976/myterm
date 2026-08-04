@@ -153,6 +153,10 @@ The Neovim regression test executes the LSP configuration with stubbed plugin ad
 - Turn off Stage Manager. It conflicts with tiling and workspace management.
 - Enable "Displays have separate Spaces" in System Settings > Desktop & Dock.
 
+### Vivaldi
+
+- Disable the macOS `option` + `cmd` + `H` shortcut for Vivaldi so it does not interfere with window navigation. Open System Settings > Keyboard > Keyboard Shortcuts > App Shortcuts, add Vivaldi with `Hide Others` as the menu title, and assign a different unused shortcut so `option` + `cmd` + `H` no longer triggers the command.
+
 ### Karabiner-Elements
 
 During `./setup.sh`, Homebrew may ask for your password because Karabiner installs a virtual keyboard driver.
