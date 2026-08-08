@@ -33,4 +33,5 @@ dmenu	ubuntu-desktop	dmenu_run	-	-	dmenu	-
 i3status	ubuntu-desktop	i3status	-	-	i3status	-
 aerospace	macos	aerospace	-	nikitabobko/tap/aerospace	-	-
 karabiner-elements	macos	karabiner_cli	-	karabiner-elements	-	-
+vorssaint	macos	-	-	vorssaint	-	-
 meslo-nerd-font	macos	-	-	font-meslo-lg-nerd-font	-	-

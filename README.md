@@ -12,6 +12,7 @@ Personal dotfiles for a terminal-first development setup on macOS Apple Silicon,
 | macOS window manager | AeroSpace |
 | Linux window manager | i3 |
 | macOS keyboard remapping | Karabiner-Elements |
+| macOS utilities | Vorssaint |
 | Agent setup | Codex `AGENTS.md`, `.agents/skills`, and safe commit helper |
 | Theme | Gruvbox Dark |
 
@@ -42,6 +43,7 @@ Package setup:
 - reads package mappings from `packages.tsv`
 - parses the package manifest directly in Bash, so a fresh minimal machine does not need Python just to start setup
 - keeps Homebrew casks explicit, so casks are selected only for macOS
+- installs Vorssaint as a macOS-only Homebrew cask
 - skips GUI packages such as Ghostty and i3 on Ubuntu Server and Raspberry Pi
 - uses an existing Node.js 22+ installation with working npm on Linux; otherwise installs checksum-verified Node.js `v22.23.1` locally
 - uses an existing Neovim 0.11+ installation on Linux; otherwise installs checksum-verified Neovim `v0.12.4` locally
@@ -90,6 +92,8 @@ git clone https://github.com/atlas976/myterm.git && cd myterm
 chmod +x setup.sh
 ./setup.sh
 ```
+
+Vorssaint is installed as a macOS-only Homebrew cask. Its first-run feature selection and macOS permissions remain manual.
 
 ### Ubuntu Desktop
 
@@ -157,6 +161,12 @@ The Neovim regression test executes the LSP configuration with stubbed plugin ad
 
 - Disable the macOS `option` + `cmd` + `H` shortcut for Vivaldi so it does not interfere with window navigation. Open System Settings > Keyboard > Keyboard Shortcuts > App Shortcuts, add Vivaldi with `Hide Others` as the menu title, and assign a different unused shortcut so `option` + `cmd` + `H` no longer triggers the command.
 
+### Vorssaint
+
+- Open Vorssaint once after setup, select only the utilities you want, and grant the permissions those features require.
+- Leave Vorssaint's Super Key feature disabled because Karabiner-Elements owns the Caps Lock mapping in this setup.
+- Leave Vorssaint's Window Layout feature disabled because AeroSpace owns window management. Vorssaint utility windows remain floating on the current workspace.
+
 ### Karabiner-Elements
 
 During `./setup.sh`, Homebrew may ask for your password because Karabiner installs a virtual keyboard driver.
@@ -223,6 +233,7 @@ macOS uses AeroSpace. Ubuntu/Linux uses i3. The workspace model is kept similar 
 | 5 | macOS catch-all; manual/general workspace on Linux |
 
 AeroSpace has a macOS catch-all rule. i3 routes only the known app classes listed in `i3/config`; unknown apps stay where they open.
+Vorssaint utility windows are exempt from the macOS catch-all and stay floating on the current workspace.
 
 ## Shortcuts
 

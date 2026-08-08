@@ -187,6 +187,7 @@ test_ubuntu_server_plan_skips_gui_packages() {
     assert_contains "$output" $'install\tapt\tgit\tgit\tgit' "Ubuntu server includes git"
     assert_contains "$output" $'install\tnpm_global\ttree-sitter-cli\ttree-sitter-cli\ttree-sitter' "Ubuntu server installs tree-sitter through npm"
     assert_contains "$output" $'skip_profile\t-\tghostty\t-\t-' "Ubuntu server skips Ghostty"
+    assert_contains "$output" $'skip_profile\t-\tvorssaint\t-\t-' "Ubuntu server skips Vorssaint"
     assert_not_contains "$output" $'install\tapt\tneovim\t' "Ubuntu server uses pinned Neovim fallback instead of apt"
     assert_not_contains "$output" $'install\tapt\tnodejs\t' "Ubuntu server uses pinned Node.js instead of apt"
     assert_not_contains "$output" $'install\tapt\tnpm\t' "Ubuntu server gets npm from pinned Node.js"
@@ -201,6 +202,7 @@ test_ubuntu_desktop_plan_is_complete() {
     assert_contains "$output" $'install\tapt\ti3\ti3\ti3' "Ubuntu desktop includes i3"
     assert_contains "$output" $'install\tapt\tdmenu\tdmenu\tdmenu_run' "Ubuntu desktop includes dmenu"
     assert_contains "$output" $'install\tapt\ti3status\ti3status\ti3status' "Ubuntu desktop includes i3status"
+    assert_contains "$output" $'skip_profile\t-\tvorssaint\t-\t-' "Ubuntu desktop skips Vorssaint"
 }
 
 test_raspberrypi_plan_skips_gui_packages() {
@@ -210,6 +212,7 @@ test_raspberrypi_plan_skips_gui_packages() {
     assert_contains "$output" $'install\tapt\tgit\tgit\tgit' "Raspberry Pi includes git"
     assert_not_contains "$output" $'install\tapt\tghostty\t' "Raspberry Pi does not install Ghostty"
     assert_not_contains "$output" $'install\tapt\ti3\t' "Raspberry Pi does not install i3"
+    assert_contains "$output" $'skip_profile\t-\tvorssaint\t-\t-' "Raspberry Pi skips Vorssaint"
 }
 
 test_macos_plan_keeps_casks_explicit() {
@@ -218,7 +221,28 @@ test_macos_plan_keeps_casks_explicit() {
 
     assert_contains "$output" $'install\tbrew\tgit\tgit\tgit' "macOS plan includes brew formula"
     assert_contains "$output" $'install\tbrew_cask\tghostty\tghostty\tghostty' "macOS plan includes Ghostty as cask"
+    assert_contains "$output" $'install\tbrew_cask\tvorssaint\tvorssaint\t-' "macOS plan includes Vorssaint as cask"
     assert_not_contains "$output" $'install\tapt\t' "macOS plan does not include apt packages"
+}
+
+test_macos_config_keeps_vorssaint_floating_on_current_workspace() {
+    local config="$ROOT_DIR/aerospace/aerospace.toml"
+    local rule
+
+    rule="$(sed -n "/if.app-id = 'com.vorssaint.utils'/,+1p" "$config")"
+
+    assert_contains "$rule" "if.app-id = 'com.vorssaint.utils'" "AeroSpace matches the Vorssaint bundle ID"
+    assert_contains "$rule" "run = ['layout floating']" "AeroSpace keeps Vorssaint windows floating"
+    assert_not_contains "$rule" "move-node-to-workspace" "AeroSpace keeps Vorssaint on the current workspace"
+}
+
+test_readme_documents_vorssaint_setup() {
+    local content
+    content="$(cat "$ROOT_DIR/README.md")"
+
+    assert_contains "$content" "| macOS utilities | Vorssaint |" "README stack includes Vorssaint"
+    assert_contains "$content" 'Vorssaint is installed as a macOS-only Homebrew cask' "README explains Vorssaint setup scope"
+    assert_contains "$content" "### Vorssaint" "README includes Vorssaint first-run guidance"
 }
 
 detect_platform() {
@@ -894,6 +918,7 @@ test_github_actions_runs_all_platform_install_tests() {
     assert_contains "$content" "Re-run setup to verify idempotency" "every platform reruns setup"
     assert_contains "$content" "MYTERM_TEST_RASPBERRY_PI: \"1\"" "Raspberry Pi job selects the hardware-specific path"
     assert_contains "$content" "brew list --cask ghostty" "macOS verifies the installed Ghostty cask"
+    assert_contains "$content" "brew list --cask vorssaint" "macOS verifies the installed Vorssaint cask"
     assert_not_contains "$macos_checks" "command -v ghostty" "macOS does not require Ghostty on the runner PATH"
     assert_not_contains "$content" "continue-on-error:" "platform failures are blocking"
 }
@@ -923,6 +948,8 @@ run_test "Ubuntu server skips GUI packages" test_ubuntu_server_plan_skips_gui_pa
 run_test "Ubuntu desktop package plan is complete" test_ubuntu_desktop_plan_is_complete
 run_test "Raspberry Pi skips GUI packages" test_raspberrypi_plan_skips_gui_packages
 run_test "macOS keeps casks explicit" test_macos_plan_keeps_casks_explicit
+run_test "macOS keeps Vorssaint floating on the current workspace" test_macos_config_keeps_vorssaint_floating_on_current_workspace
+run_test "README documents Vorssaint setup" test_readme_documents_vorssaint_setup
 run_test "detects supported Linux profiles" test_detects_supported_linux_profiles
 run_test "rejects unsupported Linux distributions" test_rejects_unsupported_linux_distribution
 run_test "rejects graphical Raspberry Pi" test_rejects_graphical_raspberry_pi

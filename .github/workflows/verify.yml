@@ -145,6 +145,7 @@ jobs:
           command -v aerospace >/dev/null
           brew list --cask ghostty >/dev/null
           brew list --cask karabiner-elements >/dev/null
+          brew list --cask vorssaint >/dev/null
 
       - name: Verify Ubuntu desktop-specific configs
         if: matrix.expected_profile == 'ubuntu-desktop'

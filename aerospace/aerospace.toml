@@ -92,6 +92,11 @@ run = ['move-node-to-workspace 2', 'layout accordion', 'move right', 'move right
 if.app-id = 'com.spotify.client'
 run = ['move-node-to-workspace 4']
 
+# Vorssaint: keep utility windows floating on the current workspace
+[[on-window-detected]]
+if.app-id = 'com.vorssaint.utils'
+run = ['layout floating']
+
 # General catch-all: move to workspace 5
 # This rule MUST be last as AeroSpace matches in order and usually stops at the first match
 # Note: we use 'check-further-callbacks = false' implicitly as it's the default.
