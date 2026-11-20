@@ -73,6 +73,20 @@ Neovim plugin versions:
 - after intentional plugin updates with `:Lazy update`, commit the lockfile if Neovim still works as expected
 - on a fresh machine, use `:Lazy restore` to install the locked plugin revisions
 
+VHDL in Neovim:
+- Mason automatically installs VHDL LS (`rust_hdl`) and VHDL Style Guide (`vhdl-style-guide`) on startup; check installation progress with `:Mason`
+- VHDL LS provides diagnostics, completion, and navigation for `.vhd` and `.vhdl` files
+- VSG formats on save and with `<leader>f`; VHDL formatting has a five-second timeout and uses the nearest VSG configuration when present
+- VSG installation requires Python 3 with pip and venv support; on Ubuntu and Raspberry Pi OS, install `python3-pip` and `python3-venv` if missing
+- for cross-file analysis, add `vhdl_ls.toml` at the VHDL project's root and map source files to libraries, for example:
+
+```toml
+[libraries]
+work.files = ["**/*.vhd", "**/*.vhdl"]
+```
+
+Mason's current VHDL LS package supports macOS Apple Silicon and Linux x86_64, but has no Linux arm64 binary. On Ubuntu arm64 or Raspberry Pi, install `vhdl_ls` separately and put it on `PATH`.
+
 Secrets:
 - setup creates `~/.secrets` from `zsh/.secrets.example` on fresh machines
 - setup sets `chmod 600 ~/.secrets`

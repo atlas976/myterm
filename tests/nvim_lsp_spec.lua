@@ -53,7 +53,7 @@ local root_dir = assert(os.getenv 'REPO_DIR', 'REPO_DIR must be set')
 local specification = dofile(root_dir .. '/nvim/lua/myterm/plugins/lsp.lua')
 specification.config()
 
-for _, server in ipairs { 'clangd', 'pyright', 'ts_ls', 'texlab', 'lua_ls' } do
+for _, server in ipairs { 'clangd', 'pyright', 'ts_ls', 'vhdl_ls', 'texlab', 'lua_ls' } do
   check(configured_servers[server] ~= nil, server .. ' should be configured through vim.lsp.config')
   check(enabled_servers[server] == true, server .. ' should be enabled through vim.lsp.enable')
 end

@@ -77,6 +77,9 @@ return {
       clangd = {},
       pyright = {},
       ts_ls = {},
+      vhdl_ls = {
+        root_markers = { 'vhdl_ls.toml', '.vhdl_ls.toml', '.git' },
+      },
       texlab = {
         root_dir = texlab_root_dir,
         settings = {
@@ -131,6 +134,7 @@ return {
     table.sort(ensure_installed)
     vim.list_extend(ensure_installed, {
       'stylua',
+      'vhdl-style-guide',
     })
 
     require('mason-tool-installer').setup { ensure_installed = ensure_installed }

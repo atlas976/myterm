@@ -19,13 +19,15 @@ return {
         return nil
       end
 
-      return { timeout_ms = 1000, lsp_format = 'fallback' }
+      local timeout_ms = vim.bo[bufnr].filetype == 'vhdl' and 5000 or 1000
+      return { timeout_ms = timeout_ms, lsp_format = 'fallback' }
     end,
     default_format_opts = {
       lsp_format = 'fallback',
     },
     formatters_by_ft = {
       lua = { 'stylua' },
+      vhdl = { 'vsg' },
     },
   },
 }
