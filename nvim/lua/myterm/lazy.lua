@@ -13,7 +13,8 @@ end
 vim.opt.rtp:prepend(lazypath)
 
 require('lazy').setup({
-  { 'NMAC427/guess-indent.nvim', opts = {} },
+  -- Keep the two-space default; :GuessIndent can still detect a file's style manually.
+  { 'NMAC427/guess-indent.nvim', opts = { auto_cmd = false } },
   require 'myterm.plugins.git',
   require 'myterm.plugins.which-key',
   require 'myterm.plugins.nvim-tree',

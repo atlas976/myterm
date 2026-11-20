@@ -16,7 +16,8 @@ return {
 
       vim.treesitter.start(buf, language)
 
-      if vim.treesitter.query.get(language, 'indents') ~= nil then
+      -- Native C indentation handles new and nested brace pairs reliably.
+      if language ~= 'c' and language ~= 'cpp' and vim.treesitter.query.get(language, 'indents') ~= nil then
         vim.bo[buf].indentexpr = "v:lua.require'nvim-treesitter'.indentexpr()"
       end
     end
